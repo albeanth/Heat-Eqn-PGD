@@ -24,16 +24,16 @@ u(x,t,k) = \ds\sum_{i=1}^n X_i(x) \cdot T_i(t) \cdot K_i(k)
 
 \hspace*{15pt}\begin{minipage}{4.5in}
 
-$n$ 
+$n$
 \parbox[t][0.65cm]{4.5in}{ is the total number of ``enrichment steps" in the solution.}
 
-$X_i(x)$ 
+$X_i(x)$
 \parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the spatial dependence at enrichment step, $i$.}
 
-$T_i(t)$ 
+$T_i(t)$
 \parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the time dependence at enrichment step, $i$.}
 
-$K_i(k)$ 
+$K_i(k)$
 \parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the diffusivity dependence at enrichment step, $i$.}
 
 \end{minipage}\vspace{5pt}
@@ -44,7 +44,7 @@ We can compute an additional enrichment step in the following manner:
 u_{n+1}(x,t,k) = \ds\sum_{i=1}^n X_i(x) \cdot T_i(t) \cdot K_i(k) + X_{n+1}(x) \cdot T_{n+1}(t) \cdot K_{n+1}(k)
 \end{equation}
 
-For notational simplicities sake, we can define $X_{n+1}(x)$, $T_{n+1}(t)$, and $K_{n+1}(k)$ as $R(x)$, $S(t)$, and $W(k)$, respectively.  
+For notational simplicities sake, we can define $X_{n+1}(x)$, $T_{n+1}(t)$, and $K_{n+1}(k)$ as $R(x)$, $S(t)$, and $W(k)$, respectively.
 
 We can define a weighted residual form of Equation \ref{eq::GenHeatEqn} with $u^*$ defined as a suitable test function:
 \begin{equation}
@@ -52,7 +52,7 @@ We can define a weighted residual form of Equation \ref{eq::GenHeatEqn} with $u^
 \ds\int_{\Omega} u^* \cdot\left(\frac{\pd u}{\pd t} -k\cdot\grad^2 u -f \right) dx \cdot dt \cdot dk = 0
 \end{equation}
 
-Using Equation \ref{eq::TrialFctn} as the definition for $u$, Equation \ref{eq::WeightedResidualForm} yields a non-linear problem that solves for the unknown functions $R(x)$, $S(t)$, and $W(k)$. For this work, Equation \ref{eq::WeightedResidualForm} will be solved iteratively using an alternating direction scheme. This will treat the problem as three successive subproblems: first, solving for $R(x)$ using an assumed solution for $S(t)$ and $W(k)$; second, solving for $S(t)$ using the just calculated $R(x)$ and an assumed solution for $W(k)$; third, solving for $W(k)$ using the just updated $R(x)$ and $S(t)$ values. 
+Using Equation \ref{eq::TrialFctn} as the definition for $u$, Equation \ref{eq::WeightedResidualForm} yields a non-linear problem that solves for the unknown functions $R(x)$, $S(t)$, and $W(k)$. For this work, Equation \ref{eq::WeightedResidualForm} will be solved iteratively using an alternating direction scheme. This will treat the problem as three successive subproblems: first, solving for $R(x)$ using an assumed solution for $S(t)$ and $W(k)$; second, solving for $S(t)$ using the just calculated $R(x)$ and an assumed solution for $W(k)$; third, solving for $W(k)$ using the just updated $R(x)$ and $S(t)$ values.
 
 \subsection{Solving for $\mathbf{R(x)}$ from $\mathbf{S(t)}$ and $\mathbf{W(k)}$}
 We can define a test function as such:
@@ -64,17 +64,17 @@ u^*(x,t,k) = R^*(x) \cdot S(t) \cdot W(k)
 Now, plugging Equations \ref{eq::R-TestFctn} and \ref{eq::TrialFctn} into the weighted residual form (Equation \ref{eq::WeightedResidualForm}):
 \begin{align*}
 \ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \bigg[ \frac{\pd}{\pd t} \left( R(x) \cdot S(t) \cdot (W(k) \right) - \\
-&  k\grad^2 \cdot \left( R(x) \cdot S(t) \cdot (W(k) \right) -f \bigg] dx \cdot dt \cdot dk = 
+&  k\grad^2 \cdot \left( R(x) \cdot S(t) \cdot (W(k) \right) -f \bigg] dx \cdot dt \cdot dk =
 \end{align*}
 \begin{align}
 \label{eq::R-1}
 - \ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \Bigg[\frac{\pd}{\pd t} \ds\sum_{i=1}^{n-1} \left(X_i(x) \cdot T_i(t) \cdot K_i(k)\right) - \nonumber\\
-&  k\grad^2 \cdot \left( \frac{\pd}{\pd t} \ds\sum_{i=1}^{n-1} \left(X_i(x) \cdot T_i(t) \cdot K_i(k)\right) \right)\Bigg] dx \cdot dt \cdot dk 
+&  k\grad^2 \cdot \left( \frac{\pd}{\pd t} \ds\sum_{i=1}^{n-1} \left(X_i(x) \cdot T_i(t) \cdot K_i(k)\right) \right)\Bigg] dx \cdot dt \cdot dk
 \end{align}
 
 The RHS of Equation \ref{eq::R-1} is known as the residual and reduces to a known scalar value at time step $n$ (i.e. the previous step in which we know all of the information). We can begin to simplify Equation \ref{eq::R-1} by distributing and collecting terms:
 \begin{equation*}
-\ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t}dt}_{s_2} \cdot \underbrace{\ds\int_{\Omega_k} W(k)^2 dk}_{w_1} - k\grad^2 R(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_k} kW(k)^2 dk}_{w_2} \Bigg] dx = 
+\ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t}dt}_{s_2} \cdot \underbrace{\ds\int_{\Omega_k} W(k)^2 dk}_{w_1} - k\grad^2 R(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_k} kW(k)^2 dk}_{w_2} \Bigg] dx =
 \end{equation*}\vspace{-15pt}
 \begin{align}
 -\ds\int_{\Omega_x}& R^*(x) \Bigg[ \ds\sum_{i=1}^{n-1} \bigg(X_i(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{dT_i(t)}{dt} dt}_{s_4} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_i(k) dk}_{w_4} - \nonumber \\
@@ -91,7 +91,7 @@ We can also consider the strong form which can be solved numerically through fin
 \begin{gather}
 \label{eq::R-strong}
 R(x)\cdot s_2 \cdot w_1 - k\grad^2 R(x) \cdot s_1 \cdot w_2 =  \nonumber \\
-\ds\sum_{i=1}^{n-1} \bigg(X_i(x) \cdot s_4 \cdot w_4 - \grad^2X_i(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3 
+\ds\sum_{i=1}^{n-1} \bigg(X_i(x) \cdot s_4 \cdot w_4 - \grad^2X_i(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3
 \end{gather}
 
 \subsection{Solving for $\mathbf{S(t)}$ from $\mathbf{R(x)}$ and $\mathbf{W(k)}$}
@@ -131,7 +131,7 @@ u^*(x,t,k) = R(x) \cdot S(t) \cdot W^*(k)
 
 As before in the previous sections, we can insert Equations \ref{eq::R-TestFctn-3} and \ref{eq::TrialFctn} into Equation \ref{eq::WeightedResidualForm}, distributing and collecting terms, and obtain the following:
 \begin{equation*}
-\ds\int_{\Omega_t} W^*(k) \bigg[W(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)^2 dx}_{r_1} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t} dt}_{s_2} - kW(k) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2R(x) dx}_{r_2} \bigg] 
+\ds\int_{\Omega_t} W^*(k) \bigg[W(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)^2 dx}_{r_1} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t} dt}_{s_2} - kW(k) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2R(x) dx}_{r_2} \bigg]
 \end{equation*}\vspace{-15pt}
 \begin{align}
 =  -& \ds\int_{\Omega_k} W^*(k) \Bigg[\ds\sum_{i=1}^{n-1} \bigg( K_i(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot X_i(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_t} S(t) \frac{\pd T_i}{\pd t} dt}_{s_4} \nonumber\\
@@ -145,7 +145,7 @@ W(k) =  \frac{-\ds\sum_{i=1}^{n-1} \bigg( K_i(k) \cdot r_5 \cdot s_4 -  K_i k \c
 \end{equation}
 
 \section{Numerical Test Problem}
-For this work, we will solve equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} to approximate the solution of Equation \ref{eq::GenHeatEqn}. The space-time-diffusivity domain is defined as such: $\Omega_x = (0,1), \Omega_t = (0,0.1], \Omega_k = (1,5)$. The unknown functions $X_i(x)$, $T_i(t)$, and $K_i(k)$ are sought on uniform grids with 61 points for the space domain, 151 points for the time domain, and 101 points in the diffusivity domain. 
+For this work, we will solve equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} to approximate the solution of Equation \ref{eq::GenHeatEqn}. The space-time-diffusivity domain is defined as such: $\Omega_x = (0,1), \Omega_t = (0,0.1], \Omega_k = (1,5)$. The unknown functions $X_i(x)$, $T_i(t)$, and $K_i(k)$ are sought on uniform grids with 61 points for the space domain, 151 points for the time domain, and 101 points in the diffusivity domain.
 
 \subsection{Computing $\mathbf{R(x)}$}
 Equation \ref{eq::R-strong} is discretized using second order finite differences (trapezoidal method) in space and first order finite differences (backward euler) in time. Each of the integrals are solved through the trapezoidal method (a second order approximation). Approaching Equation \ref{eq::R-strong} from the left hand side on a term by term basis, we can obtain the following:
@@ -155,7 +155,7 @@ Equation \ref{eq::R-strong} is discretized using second order finite differences
 s_1 &\to \frac{\Delta t}{2} \left( S(i)^2 + S(i-1)^2 \right) \\[5pt]
 w_2 &\to \frac{k\Delta k}{2}\left( W(i)^2+W(i-1)^2\right)   \\[5pt]
 w_1 &\to \frac{\Delta k}{2}\left(W(i)^2 + W(i-1)^2 \right)  \\[5pt]
-s_2 &\to \frac{1}{4} \left[ S_j(i)\left( \frac{S_j(i+1)-S(i)}{2} \right) + S(i-1)\left(\frac{S_j(i)-S_j(i-1)}{2}\right) \right] \\ 
+s_2 &\to \frac{1}{4} \left[ S_j(i)\left( \frac{S_j(i+1)-S(i)}{2} \right) + S(i-1)\left(\frac{S_j(i)-S_j(i-1)}{2}\right) \right] \\
 \intertext{Now for the right hand side:}
 s_4 &\to \frac{1}{4} \left[ S(i) \left(\frac{T_j(i+1)-T_j(i)}{2} \right) + S(i-1)\left(\frac{T_j(i)-T_j(i-1)}{2} \right) \right] \\[5pt]
 w_4 &\to \frac{\Delta K}{2} \left(W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
@@ -163,7 +163,7 @@ w_4 &\to \frac{\Delta K}{2} \left(W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
 s_5 &\to \frac{\Delta T}{2} \left(S(i)T_j(i) + S(i-1)T_j(i-1) \right) \\[5pt]
 w_5 &\to \frac{k\Delta K}{2} \left(W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
 s_3 &\to \frac{\Delta t}{2} \left( S(i) + S(i-1) \right) \\[5pt]
-w_3 &\to \frac{\Delta k}{2} \left( W(i) + W(i-1) \right) 
+w_3 &\to \frac{\Delta k}{2} \left( W(i) + W(i-1) \right)
 \end{align}
 \end{subequations}
 
@@ -178,7 +178,7 @@ v_1    &  v_2    &  v_3    & \dots & \dots & 0 \\
 0       &  \dots & \dots&             &  v_1      & v_2
 \end{bmatrix}
 \begin{bmatrix}
-R_0 \\ R_1 \\ R_2 \\ \vdots \\\vdots \\R_N 
+R_0 \\ R_1 \\ R_2 \\ \vdots \\\vdots \\R_N
 \end{bmatrix}
 = \begin{bmatrix}
 b - v_1 \\ b \\ b \\ \vdots \\\vdots \\ b-v_3
@@ -191,7 +191,7 @@ b - v_1 \\ b \\ b \\ \vdots \\\vdots \\ b-v_3
 \begin{flalign*}
 v_1 & = v_3 = -\frac{k\cdot s_1 \cdot w_2}{2\Delta x} & \\
 v_2 &= \frac{k s_1\cdot w_2}{\Delta x}+s_2w_1 \\
-b = 
+b & = 
 \end{flalign*}
 \end{minipage}\vspace{5pt}
 
@@ -203,13 +203,13 @@ b =
 \ds\int_{\Omega_k} W(k)^2 dx &\to \frac{\Delta k}{2} \left( W(i)^2 + W(i-1)^2 \right) \\[5pt]
 \ds\int_{\Omega_k} kW(k)^2 dk &\to \frac{k \Delta k}{2}\left( W(i)^2 + W(i-1)^2 \right) \\[5pt]
 \ds\int_{\Omega_x} R(x)\grad^2 R(x) dx &\to R(i) \frac{R(i+1)-2R(i)+R(i-1)}{2\Delta x} \\
-\intertext{Now for the right hand side:} 
-\frac{\pd T_j}{\pd t} &\to \frac{T_j(i+1)-T_j(i-1)}{2\Delta t} \\[5pt] 
+\intertext{Now for the right hand side:}
+\frac{\pd T_j}{\pd t} &\to \frac{T_j(i+1)-T_j(i-1)}{2\Delta t} \\[5pt]
 \ds\int_{\Omega_x} R(x) X_j(x) dx &\to \frac{\Delta x}{2} \left( R(i)X_j(i) + R(i-1)X_j(i-1) \right) \\[5pt]
 \ds\int_{\Omega_k} W(k)K_j(k)dk &\to \frac{\Delta k}{2} \left( W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
 \ds\int_{\Omega_k} kW(k)K_j(k) dk &\to \frac{k\Delta k}{2} \left( W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
 \ds\int_{\Omega_x} R(x) dx &\to \frac{\Delta x}{2} (R(i) + R(i-1)) \\[5pt]
-\ds\int_{\Omega_k} W(k) dk &\to \frac{\Delta k}{2} (W(i) + W(i-1)) 
+\ds\int_{\Omega_k} W(k) dk &\to \frac{\Delta k}{2} (W(i) + W(i-1))
 \end{align}
 \end{subequations}
 
