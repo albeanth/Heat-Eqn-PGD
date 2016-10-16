@@ -17,7 +17,7 @@ Consider the 1D transient heat equation with constant and uniform diffusivity, $
 
 The PGD solution seeks a decomposed form of the solution, $u$. We can decompose Equation \ref{eq::GenHeatEqn} in a number of ways, however, for the purpose of this exercise we will decompose the solution in space, $x$, time, $t$, and diffusivity, $k$. We will define the dimensionality of the problem as $\left( x,t,k \right) \in \Omega$, where $\Omega = \Omega_x \times \Omega_t \times \Omega_k$ with $\Omega_x \subset \mathbb{R}, \Omega_t \subset \mathbb{R},$ and $\Omega_k \subset \mathbb{R}$.
 \begin{equation}
-u(x,t,k) = \ds\sum_{j=1}^n X_i(x) \cdot T_i(t) \cdot K_i(k)
+u(x,t,k) = \ds\sum_{j=1}^n X_j(x) \cdot T_j(t) \cdot K_j(k)
 \end{equation}
 
 \vspace{-6pt}where:\\[-3pt]
@@ -27,21 +27,21 @@ u(x,t,k) = \ds\sum_{j=1}^n X_i(x) \cdot T_i(t) \cdot K_i(k)
 $n$
 \parbox[t][0.65cm]{4.5in}{ is the total number of ``enrichment steps" in the solution.}
 
-$X_i(x)$
-\parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the spatial dependence at enrichment step, $i$.}
+$X_j(x)$
+\parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the spatial dependence at enrichment step, $j$.}
 
-$T_i(t)$
-\parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the time dependence at enrichment step, $i$.}
+$T_j(t)$
+\parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the time dependence at enrichment step, $j$.}
 
-$K_i(k)$
-\parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the diffusivity dependence at enrichment step, $i$.}
+$K_j(k)$
+\parbox[t][0.65cm]{4.5in}{ $\to$ basis vector defining the diffusivity dependence at enrichment step, $j$.}
 
 \end{minipage}\vspace{5pt}
 
 We can compute an additional enrichment step in the following manner:
 \begin{equation}
 \label{eq::TrialFctn}
-u_{n+1}(x,t,k) = \ds\sum_{j=1}^n X_i(x) \cdot T_i(t) \cdot K_i(k) + X_{n+1}(x) \cdot T_{n+1}(t) \cdot K_{n+1}(k)
+u_{n+1}(x,t,k) = \ds\sum_{j=1}^n X_j(x) \cdot T_j(t) \cdot K_j(k) + X_{n+1}(x) \cdot T_{n+1}(t) \cdot K_{n+1}(k)
 \end{equation}
 
 For notational simplicities sake, we can define $X_{n+1}(x)$, $T_{n+1}(t)$, and $K_{n+1}(k)$ as $R(x)$, $S(t)$, and $W(k)$, respectively.
@@ -68,8 +68,8 @@ Now, plugging Equations \ref{eq::R-TestFctn} and \ref{eq::TrialFctn} into the we
 \end{align*}
 \begin{align}
 \label{eq::R-1}
-- \ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \Bigg[\frac{\pd}{\pd t} \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_i(x) \cdot T_i(t) \cdot K_i(k)\right)\right) - \nonumber\\
-&  k\grad^2 \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_i(x) \cdot T_i(t) \cdot K_i(k)\right) \right)\Bigg] dx \cdot dt \cdot dk
+- \ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \Bigg[\frac{\pd}{\pd t} \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_j(x) \cdot T_j(t) \cdot K_j(k)\right)\right) - \nonumber\\
+&  k\grad^2 \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_j(x) \cdot T_j(t) \cdot K_j(k)\right) \right)\Bigg] dx \cdot dt \cdot dk
 \end{align}
 
 The RHS of Equation \ref{eq::R-1} is known as the residual and reduces to a known scalar value at time step $n$ (i.e. the previous step in which we know all of the information). We can begin to simplify Equation \ref{eq::R-1} by distributing and collecting terms:
@@ -77,21 +77,21 @@ The RHS of Equation \ref{eq::R-1} is known as the residual and reduces to a know
 \ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t}dt}_{s_2} \cdot \underbrace{\ds\int_{\Omega_k} W(k)^2 dk}_{w_1} - \grad^2 R(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_k} kW(k)^2 dk}_{w_2} \Bigg] dx =
 \end{equation*}\vspace{-15pt}
 \begin{align}
--\ds\int_{\Omega_x}& R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_i(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{dT_i(t)}{dt} dt}_{s_4} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_i(k) dk}_{w_4} - \nonumber \\
-& \grad^2X_i(x) \cdot \underbrace{\ds\int_{\Omega_t}S(t)T_i(t) dt}_{s_5} \cdot \underbrace{\ds\int_{\Omega_k}kW(k)K_i(k)dk}_{w_5} \bigg) + f \cdot \underbrace{\ds\int_{\Omega_t} S(t) dt}_{s_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dx
+-\ds\int_{\Omega_x}& R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{dT_j(t)}{dt} dt}_{s_4} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_j(k) dk}_{w_4} - \nonumber \\
+& \grad^2X_j(x) \cdot \underbrace{\ds\int_{\Omega_t}S(t)T_j(t) dt}_{s_5} \cdot \underbrace{\ds\int_{\Omega_k}kW(k)K_j(k)dk}_{w_5} \bigg) + f \cdot \underbrace{\ds\int_{\Omega_t} S(t) dt}_{s_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dx
 \end{align}
 
 Rewriting the above equation, we can obtain a weak form that can be solved via a suitable discretization scheme like finite elements:
 \begin{gather}
 \ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot s_2 \cdot w_1 - \grad^2 R(x) \cdot s_1 \cdot w_2 \Bigg] dx = \nonumber \\
- -  \ds\int_{\Omega_x} R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_i(x) \cdot s_4 \cdot w_4 - \grad^2X_i(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3 \Bigg] dx
+ -  \ds\int_{\Omega_x} R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot s_4 \cdot w_4 - \grad^2X_j(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3 \Bigg] dx
 \end{gather}
 
 We can also consider the strong form which can be solved numerically through finite difference methods:
 \begin{gather}
 \label{eq::R-strong}
 R(x)\cdot s_2 \cdot w_1 - \grad^2 R(x) \cdot s_1 \cdot w_2 =  \nonumber \\
-\ds\sum_{j=1}^{n-1} \bigg(X_i(x) \cdot s_4 \cdot w_4 - \grad^2X_i(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3
+\ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot s_4 \cdot w_4 - \grad^2X_j(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3
 \end{gather}
 
 \subsection{Solving for $\mathbf{S(t)}$ from $\mathbf{R(x)}$ and $\mathbf{W(k)}$}
@@ -106,20 +106,20 @@ As before in the previous section, we can insert Equations \ref{eq::R-TestFctn-2
 \ds\int_{\Omega_t} S^*(t) \bigg[ \frac{\pd S}{\pd t} \cdot \underbrace{\ds\int_{\Omega_x} R(x)^2 dx}_{r_1} \cdot \underbrace{\ds\int_{\Omega_k}W(k)^2 dk}_{w_1} - S(t) \cdot \underbrace{\ds\int_{\Omega_k}kW(k)^2dk}_{w_2} \cdot \underbrace{\int_{\Omega_x} R(x)\cdot\grad^2R(x) dx}_{r_2} \bigg]
 \end{equation*}\vspace{-15pt}
 \begin{align}
-= & - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_i}{\pd t} \cdot  \underbrace{\ds\int_{\Omega_x} R(x) X_i(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_i(k) dk}_{w_4} \nonumber\\
- - & T_i(t)\cdot \underbrace{\ds\int_{\Omega_k} kW(k)K_i(k)dk}_{w_5} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot\grad^2X_i(x)}_{r_4} \bigg) + f \cdot \underbrace{\ds\int_{\Omega_x} R(x)dx}_{r_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dt
+= & - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot  \underbrace{\ds\int_{\Omega_x} R(x) X_j(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_j(k) dk}_{w_4} \nonumber\\
+ - & T_j(t)\cdot \underbrace{\ds\int_{\Omega_k} kW(k)K_j(k)dk}_{w_5} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot\grad^2X_j(x)}_{r_4} \bigg) + f \cdot \underbrace{\ds\int_{\Omega_x} R(x)dx}_{r_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dt
 \end{align}
 
 Rewriting the above equation, we can obtain a weak form that can be solved via a suitable discretization scheme like finite elements:
 \begin{gather}
 \ds\int_{\Omega_t} S^*(t) \bigg[ \frac{\pd S}{\pd t} \cdot r_1 \cdot w_1- S(t) \cdot w_2 \cdot r_2 \bigg] \nonumber \\
-= - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_i}{\pd t} \cdot r_5 \cdot w_4 - T_i(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3 \Bigg] dt
+= - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot r_5 \cdot w_4 - T_j(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3 \Bigg] dt
 \end{gather}
 
 We can also consider the strong form which can be solved numerically through finite difference methods:
 \begin{equation}
 \label{eq::S-Strong}
-\frac{\pd S}{\pd t} \cdot r_1 \cdot w_1 - S(t) \cdot w_2 \cdot r_2 = \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_i}{\pd t} \cdot r_5 \cdot w_4 - T_i(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3
+\frac{\pd S}{\pd t} \cdot r_1 \cdot w_1 - S(t) \cdot w_2 \cdot r_2 = \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot r_5 \cdot w_4 - T_j(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3
 \end{equation}
 
 \subsection{Solving for $\mathbf{W(k)}$ from $\mathbf{R(x)}$ and $\mathbf{S(t)}$}
@@ -134,20 +134,20 @@ As before in the previous sections, we can insert Equations \ref{eq::R-TestFctn-
 \ds\int_{\Omega_t} W^*(k) \bigg[W(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)^2 dx}_{r_1} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t} dt}_{s_2} - kW(k) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2R(x) dx}_{r_2} \bigg]
 \end{equation*}\vspace{-15pt}
 \begin{align}
-=  -& \ds\int_{\Omega_k} W^*(k) \Bigg[\ds\sum_{j=1}^{n-1} \bigg( K_i(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot X_i(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_t} S(t) \frac{\pd T_i}{\pd t} dt}_{s_4} \nonumber\\
-- &k K_i  \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2 X_i(x)dx}_{r_4} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\cdot T_i(t)dt}_{s_5}\bigg) + f\cdot \underbrace{\ds\int_{\Omega_x} R(x) dx }_{r_3} \cdot \underbrace{\ds\int_{\Omega_t}S(t)dt}_{s_3} \Bigg]
+=  -& \ds\int_{\Omega_k} W^*(k) \Bigg[\ds\sum_{j=1}^{n-1} \bigg( K_j(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot X_j(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_t} S(t) \frac{\pd T_j}{\pd t} dt}_{s_4} \nonumber\\
+- &k K_j  \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2 X_j(x)dx}_{r_4} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\cdot T_j(t)dt}_{s_5}\bigg) + f\cdot \underbrace{\ds\int_{\Omega_x} R(x) dx }_{r_3} \cdot \underbrace{\ds\int_{\Omega_t}S(t)dt}_{s_3} \Bigg]
 \end{align}
 
 Simplifying the above equation, we can obtain an analytical solution for the unknown $W(k)$ value:
 \begin{equation}
 \label{eq::W-analytical}
-W(k) =  \frac{-\ds\sum_{j=1}^{n-1} \bigg( K_i(k) \cdot r_5 \cdot s_4 -  k K_i \cdot r_4 \cdot s_5\bigg) + f\cdot r_3 \cdot s_3}{r_1 \cdot s_2 - k \cdot s_1 \cdot r_2}
+W(k) =  \frac{-\ds\sum_{j=1}^{n-1} \bigg( K_j(k) \cdot r_5 \cdot s_4 -  k K_j \cdot r_4 \cdot s_5\bigg) + f\cdot r_3 \cdot s_3}{r_1 \cdot s_2 - k \cdot s_1 \cdot r_2}
 \end{equation}
 
 \section{Numerical Test Problem}
-For this work, we will solve equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} to approximate the solution of Equation \ref{eq::GenHeatEqn}. The space-time-diffusivity domain is defined as such: $\Omega_x = (0,1), \Omega_t = (0,0.1], \Omega_k = (1,5)$. The unknown functions $X_i(x)$, $T_i(t)$, and $K_i(k)$ are sought on uniform grids with 61 points for the space domain, 151 points for the time domain, and 101 points in the diffusivity domain.
+For this work, we will solve equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} to approximate the solution of Equation \ref{eq::GenHeatEqn}. The space-time-diffusivity domain is defined as such: $\Omega_x = (0,1), \Omega_t = (0,0.1], \Omega_k = (1,5)$. The unknown functions $X_j(x)$, $T_j(t)$, and $K_j(k)$ are sought on uniform grids with 61 points for the space domain, 151 points for the time domain, and 101 points in the diffusivity domain.
 
-Equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} are discretized using second order finite differences (trapezoidal method) in space and first order finite differences  (backward euler) in time. Each of the integrals are solved through the trapezoidal method (a second order approximation). 
+Equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} are discretized using second order finite differences (trapezoidal method) in space and first order finite differences  (backward euler) in time. Each of the integrals are solved through the trapezoidal method (a second order approximation).
 
 \subsection{Computing $\mathbf{R(x)}$}
 \label{sec::CompR}
@@ -199,25 +199,29 @@ b & = \ds\sum_{j=1}^{n-1} \left( -X_j(i-1) \frac{s_5\cdot w_5}{2\Delta x} + X_j(
 \end{flalign*}
 \end{minipage}\vspace{5pt}
 
-\subsection{Computing $\mathbf{S(x)}$}
-Starting with Equation \ref{eq::S-Strong} on the left hand side:
+\subsection{Computing $\mathbf{S(t)}$}
+Because $w_1$ through $w_5$ were already evaluated in the previous section, they will not be redefined here. Starting with Equation \ref{eq::S-Strong} on the left hand side we can make the following evaluations with the just calculated $R(x)$:
 \begin{subequations}
 \begin{align*}
 \frac{\pd S}{\pd t} &\to \frac{S(i+1) - S(i-1)}{2\Delta t} \\[5pt]
 r_1 &\to \frac{\Delta x}{2} \left( R(i)^2 + R(i-1)^2 \right) \\[5pt]
-w_1 &\to \frac{\Delta k}{2} \left( W(i)^2 + W(i-1)^2 \right) \\[5pt]
-w_2 &\to k\frac{\Delta k}{2}\left( W(i)^2 + W(i-1)^2 \right) \\[5pt]
-r_2 &\to \frac{\Delta x}{2} \left( R(i) \frac{R(i+1)-2R(i)+R(i-1)}{2\Delta x} + R(i-1) \frac{R(i)-2R(i-1)+R(i-2)}{2\Delta x} \right)^*\\
-      & \text{$^*$ for interior points} \\
+% w_1 &\to \frac{\Delta k}{2} \left( W(i)^2 + W(i-1)^2 \right) \\[5pt]
+% w_2 &\to k\frac{\Delta k}{2}\left( W(i)^2 + W(i-1)^2 \right) \\[5pt]
+r_2 &\to \frac{1}{4} \left( R(i) \left( R(i+1)-2R(i)+R(i-1) \right) + R(i-1) \left( R(i)-2R(i-1)+R(i-2) \right) \right)^*\\
+    & \text{$\quad\:\:^*1<i\leq N-1$} \\
+    &\to \frac{\Delta x^3}{8} \left[ R(i)*\left( R(i)-2R(i+1)+R(i+2)\right) + R(i-1)*\left( R(i-1)-2R(i)+R(i+1)\right)\right]^{\dagger,\$}\\
+    & \text{$\quad\:\:^\dagger i=1$, $^\$$see appendix for derivation}\\
 \intertext{Now for the right hand side:}
 \frac{\pd T_j}{\pd t} &\to \frac{T_j(i+1)-T_j(i-1)}{2\Delta t} \\[5pt]
 r_5 &\to \frac{\Delta x}{2} \left( R(i)X_j(i) + R(i-1)X_j(i-1) \right) \\[5pt]
-w_4 &\to \frac{\Delta k}{2} \left( W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
-w_5 &\to k\frac{\Delta k}{2} \left( W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
-r_4 &\to \frac{\Delta x}{2} \left( R(i)\frac{R(i+1)-2R(i)+R(i-1)}{2\Delta x} + R(i-1)\frac{R(i)-2R(i-1)+R(i-2)}{2\Delta x} \right)^*\\
-      &\text{$^*$ for interior points} \\[5pt]
+% w_4 &\to \frac{\Delta k}{2} \left( W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
+% w_5 &\to k\frac{\Delta k}{2} \left( W(i)K_j(i) + W(i-1)K_j(i-1) \right) \\[5pt]
+r_4 &\to \frac{\Delta x}{2} \left( R(i)\frac{X_j(i+1)-2X_j(i)+X_j(i-1)}{2\Delta x} + R(i-1)\frac{X_j(i)-2X_j(i-1)+X_j(i-2)}{2\Delta x} \right)^*\\
+    & \text{$\quad\:\:^*1<i\leq N-1$} \\
+    &\to \frac{\Delta x^3}{8} \left[ R(i)*\left( X_j(i)-2X_j(i+1)+X_j(i+2)\right) + R(i-1)*\left( X_j(i-1)-2X_j(i)+X_j(i+1)\right)\right]^{\dagger,\$}\\
+    & \text{$\quad\:\:^\dagger i=1$, $^\$$see appendix for derivation}\\
 r_3  &\to \frac{\Delta x}{2} (R(i) + R(i-1)) \\[5pt]
-w_3 &\to \frac{\Delta k}{2} (W(i) + W(i-1))
+% w_3 &\to \frac{\Delta k}{2} (W(i) + W(i-1))
 \end{align*}
 \end{subequations}
 
@@ -251,30 +255,30 @@ y & = \ds\sum_{j=1}^{n-1} \left( -T_j(i-1) \frac{r_5 \cdot w_4}{2\Delta t} - T_j
 \end{minipage}\vspace{5pt}
 
 \subsection{Computing $\mathbf{W(k)}$}
-Since Equation \ref{eq::W-analytical} is an analytical solution, we will approach it's discretization through the numerator and denominator, respectively.
-\begin{subequations}
-\begin{align*}
-r_5 &\to \frac{\Delta x}{2} \left[ R(i)\cdot X_j(i) + R(i-1)\cdot X_j(i-1) \right] \\[5pt]
-s_4 &\to \frac{1}{2} \left[ S(i) \left(T_j(i+1) - T_j(i)\right)  + S(i-1) \left( T_j(i) - T_j(i-1) \right) \right]\\[5pt]
-r_4 &\to \frac{1}{4} \left[ R(i) \left(X_j(i+1)-2X_j(i)+X_j(i-1)\right) + R(i-1) \left( X_j(i)-2X_j(i-1)+X_j(i-1)\right) \right] \\[5pt]
-s_5 &\to \frac{\Delta t}{2} \left[ S(i)T_j(i) + S(i-1)T_j(i-1) \right] \\[5pt]
-r_3 &\to \frac{\Delta x}{2} \left[ R(i) + R(i-1) \right] \\[5pt]
-s_3 &\to \frac{\Delta t}{2} \left[ S(i) + S(i-1) \right] \\
-\intertext{Now for the denominator:}
-r_1 &\to \frac{\Delta x}{2} \left[ R(i)^2 + R(i-1)^2 \right] \\[5pt]
-s_2 &\to \frac{1}{2} \left[ S(i) \left(S(i+1) - S(i)\right)  + S(i-1) \left( S(i) - S(i-1) \right) \right]\\[5pt]
-s_1 &\to \frac{\Delta t}{2} \left[ S(i)^2 + S(i-1)^2 \right] \\[5pt]
-r_2 &\to \frac{1}{4} \left[ R(i) \left(R(i+1)-2R(i)+R(i-1)\right) + R(i-1) \left( R(i)-2R(i-1)+R(i-1)\right) \right]
-\end{align*}
-\end{subequations}
+%Since Equation \ref{eq::W-analytical} is an analytical solution, we will approach it's discretization through the numerator and denominator, respectively.
+%\begin{subequations}
+%\begin{align*}
+%r_5 &\to \frac{\Delta x}{2} \left[ R(i)\cdot X_j(i) + R(i-1)\cdot X_j(i-1) \right] \\[5pt]
+%s_4 &\to \frac{1}{2} \left[ S(i) \left(T_j(i+1) - T_j(i)\right)  + S(i-1) \left( T_j(i) - T_j(i-1) \right) \right]\\[5pt]
+%r_4 &\to \frac{1}{4} \left[ R(i) \left(X_j(i+1)-2X_j(i)+X_j(i-1)\right) + R(i-1) \left( X_j(i)-2X_j(i-1)+X_j(i-1)\right) \right] \\[5pt]
+%s_5 &\to \frac{\Delta t}{2} \left[ S(i)T_j(i) + S(i-1)T_j(i-1) \right] \\[5pt]
+%r_3 &\to \frac{\Delta x}{2} \left[ R(i) + R(i-1) \right] \\[5pt]
+%s_3 &\to \frac{\Delta t}{2} \left[ S(i) + S(i-1) \right] \\
+%\intertext{Now for the denominator:}
+%r_1 &\to \frac{\Delta x}{2} \left[ R(i)^2 + R(i-1)^2 \right] \\[5pt]
+%s_2 &\to \frac{1}{2} \left[ S(i) \left(S(i+1) - S(i)\right)  + S(i-1) \left( S(i) - S(i-1) \right) \right]\\[5pt]
+%s_1 &\to \frac{\Delta t}{2} \left[ S(i)^2 + S(i-1)^2 \right] \\[5pt]
+%r_2 &\to \frac{1}{4} \left[ R(i) \left(R(i+1)-2R(i)+R(i-1)\right) + R(i-1) \left( R(i)-2R(i-1)+R(i-1)\right) \right]
+%\end{align*}
+%\end{subequations}
 
-The matrix form in this case is of a diagonal form:
+With updated values for $R(x)$ and $S(t)$, we can now calculate $W(k)$. Since Equation \ref{eq::W-analytical} is analytical, the matrix form is as follows:
 \begin{equation}
 \begin{bmatrix}
 1 & 0 & 0 & \dots & 0 \\
 0 & 1 & 0 & \dots & 0 \\
 0 & 0 & 1 & \dots & 0 \\
-\vdots & \vdots &  & \ddots & \vdots\\ 
+\vdots & \vdots &  & \ddots & \vdots\\
 0 & 0 &  \dots  &\dots & 1
 \end{bmatrix}
 \begin{bmatrix}
@@ -289,7 +293,7 @@ z \\ z \\ z \\ \vdots  \\ z
 
 \hspace*{15pt}\begin{minipage}{4.5in}
 \begin{flalign*}
-z  & = \frac{-\ds\sum_{j=1}^{n-1} \bigg( K_i(k) \cdot r_5 \cdot s_4 -  k K_i \cdot r_4 \cdot s_5\bigg) + f\cdot r_3 \cdot s_3}{r_1 \cdot s_2 - k \cdot s_1 \cdot r_2}
+z  & = \frac{-\ds\sum_{j=1}^{n-1} \bigg( K_j(k) \cdot r_5 \cdot s_4 -  k K_j \cdot r_4 \cdot s_5\bigg) + f\cdot r_3 \cdot s_3}{r_1 \cdot s_2 - k \cdot s_1 \cdot r_2}
 \end{flalign*}
 \end{minipage}\vspace{5pt}
 
