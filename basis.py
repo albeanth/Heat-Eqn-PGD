@@ -4,12 +4,12 @@ import math
 def updateR(R,X,dx):
     r1=0; r2=0; r3=0; r4=0; r5=0
     for idr,dum in enumerate(R):
-        if ((idr==0) or (idr==np.shape(X)[1]-1)): # boundary points
+        if ((idr==0) or (idr==len(R)-1)): # boundary points
             pass
         else: # interior points
             r1 += dx/2 * (math.pow(R[idr],2)+math.pow(R[idr-1],2))
             if idr == 1:
-                r2+= math.pow(dx,3)/8 * (R[idr]*(R[idr]-2*R[idr+1]+R[idr]) + R[idr-1]*(R[idr-1]-2*R[idr]+R[idr+1]))
+                r2 += math.pow(dx,3)/8 * (R[idr]*(R[idr]-2*R[idr+1]+R[idr]) + R[idr-1]*(R[idr-1]-2*R[idr]+R[idr+1]))
             else:
                 r2 += 1/4 * (R[idr]*(R[idr+1]-2*R[idr]+R[idr-1]) + R[idr-1]*(R[idr]-2*R[idr-1]+R[idr-2]))
             r3 += dx/2 * (R[idr]+R[idr-1])
@@ -28,7 +28,7 @@ def updateR(R,X,dx):
 def updateS(S,T,dt):
     s1=0.0; s2=0.0; s3=0.0; s4=0.0; s5=0.0
     for ids,dum in enumerate(S):
-        if ((ids==0) or (ids==np.shape(T)[1]-1)): # boundary points
+        if ((ids==0) or (ids==len(S)-1)): # boundary points
             pass
         else: # interior points
             s1 += dt/2 * (math.pow(S[ids],2)+math.pow(S[ids-1],2))
