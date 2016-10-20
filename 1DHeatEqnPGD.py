@@ -18,22 +18,28 @@ except ImportError:
     StyDim='';
 
 ## Initializing Info
-k = np.linspace(1,5,101-1) # W/(m*K)
+Xsize = 61
+Tsize = 151
+Ksize = 101
+
+k = np.linspace(1,5,Ksize) # W/(m*K)
 f = 1 # constant source term
 
-X = np.array([np.zeros(61)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
-T = np.array([np.zeros(151)],ndmin=2) # time domain
-K = np.array([np.zeros(101)],ndmin=2) # diffusivity domain
-dx = 1/61
-dt = 0.1/151
-dk = 5/101
+X = np.array([np.zeros(Xsize)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
+T = np.array([np.zeros(Tsize)],ndmin=2) # time domain
+K = np.array([np.zeros(Ksize)],ndmin=2) # diffusivity domain
+dx = (1-0)/Xsize
+dt = (0.1-0)/Tsize
+dk = (5-1)/Ksize
 
 ## guesses for R,S,W
 R_old = np.ones(np.shape(X)[1])
 R_old[0] = 0; R_old[-1] = 0
 
 S_old = np.ones(np.shape(T)[1])
-S_old[0] = 0; S_old[-1] = 0
+S_old[0] = 0
+S_new = np.ones(np.shape(T)[1])
+S_new[0] = 0
 
 W_old = np.ones(np.shape(K)[1])
 W_new = np.ones(np.shape(K)[1])
@@ -50,7 +56,7 @@ while nu_check >= nu:
     #######################
     ##   Solve for R(x)  ##
     #######################
-    print('\nSolving for R(x)')
+    # print('\nSolving for R(x)')
     s1,s2,s3,s4,s5 = basis.updateS(S_old,T,dt)
     # print('updatedS -> '+str(s1)+', '+str(s2)+', '+str(s3)+', '+str(s4)+', '+str(s5))
     w1,w2,w3,w4,w5 = basis.updateW(W_old,K,dk,k)
@@ -59,21 +65,21 @@ while nu_check >= nu:
     v2 = s2*w1 + (2*s1*w2)/math.pow(dx,2)
     v3 = v1
     b = 0.0
-    for Elem in X:
+    for ide,Elem in enumerate(X):
         # print('R(x) '+str(Elem[0]),', '+str(Elem[-1]))
         for cnt,idx in enumerate(Elem):
-            if ((cnt==0) or (cnt==np.shape(X)[1]-1)): #boundary points
-                b += 0
+            if ((cnt==0) or (cnt==Xsize-1)): #boundary points
+                b += 0.0
             else:
-                b += -Elem[cnt]*s4*w4 + ((Elem[cnt+1]-2*Elem[cnt]+Elem[cnt-1])/math.pow(dx,2))*s5*w5
+                b += -Elem[cnt]*s4[ide]*w4[ide] + ((Elem[cnt+1]-2*Elem[cnt]+Elem[cnt-1])/math.pow(dx,2))*s5[ide]*w5[ide]
     b += f*s3*w3
 
-    R_Lmatrix = v1*np.eye(np.shape(X)[1], k=-1) + v2*np.eye(np.shape(X)[1], k=0) + v3*np.eye(np.shape(X)[1], k=1)
+    R_Lmatrix = v1*np.eye(Xsize, k=-1) + v2*np.eye(Xsize, k=0) + v3*np.eye(Xsize, k=1)
     R_Lmatrix[0,:] = [0.0]
     R_Lmatrix[0,0] = 1.0
     R_Lmatrix[-1,:] = [0.0]
     R_Lmatrix[-1,-1] = 1.0
-    bVec = np.array((b*np.ones(np.shape(X)[1])))
+    bVec = np.array((b*np.ones(Xsize)))
     bVec[0] = 0.0
     bVec[-1] = 0.0
     # bVec[0] = bVec[0]-v1
@@ -85,7 +91,7 @@ while nu_check >= nu:
     #######################
     ##   Solve for S(t)  ##
     #######################
-    print('Solving for S(t)')
+    # print('Solving for S(t)')
     r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx)
     # print('updatedR -> '+str(r1)+', '+str(r2)+', '+str(r3)+', '+str(r4)+', '+str(r5))
     # All 'w' integrals already solved for in R(x) solve. Don't need to resolve them.
@@ -93,34 +99,21 @@ while nu_check >= nu:
     u1 = -(r1*w1)/(2*dt)
     u2 = -w2*r2
     u3 = -u1
-    y = 0.0
-    for Elem in T:
+    tmp = 0.0
+    for ide,Elem in enumerate(T):
         # print('S(t) '+str(Elem[0]),', '+str(Elem[-1]))
         for cnt,idx in enumerate(Elem):
-            if ((cnt==0) or (cnt==np.shape(T)[1]-1)): #boundary points
-                y += 0
+            if ((cnt==0) or (cnt==Tsize-1)): #boundary points
+                tmp += 0.0
             else:
-                y += -((Elem[cnt+1]-Elem[cnt-1])/(2*dt))*r5*w4 + Elem[cnt]*w5*r4
-    y += f*r3*w3
-
-    S_Lmatrix = u1*np.eye(np.shape(T)[1], k=-1) + u2*np.eye(np.shape(T)[1], k=0) + u3*np.eye(np.shape(T)[1], k=1)
-    S_Lmatrix[0,:] = [0.0]
-    S_Lmatrix[0,0] = 1.0
-    S_Lmatrix[-1,:] = [0.0]
-    S_Lmatrix[-1,-1] = 1.0
-    yVec = np.array((y*np.ones(np.shape(T)[1])))
-    yVec[0] = 0.0
-    yVec[-1] = 0.0
-    # yVec[0] = yVec[0] - u1
-    # yVec[-1] = yVec[-1] - u3
-
-    S_new = np.dot(np.linalg.inv(S_Lmatrix),yVec)
-    # S_new = linalg.solve_triangular(S_Lmatrix,yVec)
+                tmp += -((Elem[cnt+1]-Elem[cnt])/dt)*r5[ide]*w4[ide] + Elem[cnt]*w5[ide]*r4[ide]
+    for idy in np.arange(0,Tsize-1):
+        S_new[idy+1] = (tmp + f*r3*w3 + S_new[idy]*w1*r1/dt)/(w1*r1/dt - w2*r2)
 
     #######################
     ##   Solve for W(k)  ##
     #######################
-    print('Solving for W(k)')
+    # print('Solving for W(k)')
     r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx)
     # print('updatedR -> '+str(r1)+', '+str(r2)+', '+str(r3)+', '+str(r4)+', '+str(r5))
     s1,s2,s3,s4,s5 = basis.updateS(S_new,T,dt)
@@ -128,10 +121,9 @@ while nu_check >= nu:
 
     for idk,param in enumerate(k): # each element in conductivity range
         tmp = 0.0
-        for enr in K: # each enrichment step
-            for test,value in enumerate(enr):
-                tmp += -(value*r5*s4 - param*value*r4*s5)
-                # print(test,tmp)
+        for ide,Elem in enumerate(K): # each enrichment step
+            for value in Elem:
+                tmp += -(value*r5[ide]*s4[ide] - param*value*r4[ide]*s5[ide])
         tmp += f*r3*s3
         tmp = tmp/(r1*s2-param*s1*r2)
         W_new[idk] = tmp
@@ -168,6 +160,12 @@ while nu_check >= nu:
         S_old = S_new
         W_old = W_new
         enrCnt += 1
+        # if enrCnt == 1:
+        #     print(Red+'maximum iteration count reached.')
+        #     X = np.vstack((X,R_new))
+        #     T = np.vstack((T,S_new))
+        #     K = np.vstack((K,W_new))
+        #     break
     else:
         NumEnr += 1 # counter for number of steps for enrichment step convergence
         X = np.vstack((X,R_new))
@@ -181,7 +179,7 @@ for cnt,elem in enumerate(X):
     if cnt == 0:
         pass
     else:
-        plt.plot(np.linspace(0,1,61), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
+        plt.plot(np.linspace(0,1,Xsize), elem, label = str(cnt), linewidth = 3)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
 
@@ -190,7 +188,7 @@ for cnt,elem in enumerate(T):
     if cnt == 0:
         pass
     else:
-        plt.plot(np.linspace(0,0.1,151), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
+        plt.plot(np.linspace(0,0.1,Tsize), elem, label = str(cnt), linewidth = 3)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
 
@@ -199,15 +197,7 @@ for cnt,elem in enumerate(K):
     if cnt == 0:
         pass
     else:
-        plt.plot(np.linspace(1,5,101), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
+        plt.plot(np.linspace(1,5,Ksize), elem, label = str(cnt), linewidth = 3)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
 plt.show()
-#
-# phi=0.0
-# for i,t,k in zip(X,T,K):
-#     phi += np.tensordot(np.tensordot(i,t,axes=0),k,axes=0)
-# print(np.shape(phi))
-# plt.figure(4)
-# Axes3D.plot_surface(phi[]0)
-# plt.show()
