@@ -120,7 +120,6 @@ while eps_check > eps:
             tmp += f*r3*s3
             W_new[idk] = tmp/(r1*s2-param*s1*r2)
         # print(W_new)
-
         #######################################
         ## Check for enrichment convergence  ##
         #######################################
@@ -179,31 +178,39 @@ while eps_check > eps:
         break
 
 
-print('plots!')
-plt.figure(1)
-for cnt,elem in enumerate(X):
-    if cnt == 0:
-        pass
-    else:
-        plt.plot(np.linspace(0,1,Xsize), elem/max(elem), label = str(cnt), linewidth = 3)
-plt.grid(True)
-plt.legend(loc='best',fontsize='x-small')
+u_app = np.zeros(Xsize)
+for ide in np.arange(0,len(X)):
+    for idx,x in enumerate(X[ide]):
+        u_app[idx] += x*T[ide][-1]*K[ide][-1] # will give solution as a function of space; at last time step and a thermal conductivity of 1.
+    print(u_app)
+for elem in u_app:
+    print(elem)
 
-plt.figure(2)
-for cnt,elem in enumerate(T):
-    if cnt == 0:
-        pass
-    else:
-        plt.plot(np.linspace(0,0.1,Tsize), elem/max(elem), label = str(cnt), linewidth = 3)
-plt.grid(True)
-plt.legend(loc='best',fontsize='x-small')
-
-plt.figure(3)
-for cnt,elem in enumerate(K):
-    if cnt == 0:
-        pass
-    else:
-        plt.plot(np.linspace(1,5,Ksize), elem/max(elem), label = str(cnt), linewidth = 3)
-plt.grid(True)
-plt.legend(loc='best',fontsize='x-small')
-plt.show()
+# print('plots!')
+# plt.figure(1)
+# for cnt,elem in enumerate(X):
+#     if cnt == 0:
+#         pass
+#     else:
+#         plt.plot(np.linspace(0,1,Xsize), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
+# plt.grid(True)
+# plt.legend(loc='best',fontsize='x-small')
+#
+# plt.figure(2)
+# for cnt,elem in enumerate(T):
+#     if cnt == 0:
+#         pass
+#     else:
+#         plt.plot(np.linspace(0,0.1,Tsize), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
+# plt.grid(True)
+# plt.legend(loc='best',fontsize='x-small')
+#
+# plt.figure(3)
+# for cnt,elem in enumerate(K):
+#     if cnt == 0:
+#         pass
+#     else:
+#         plt.plot(np.linspace(1,5,Ksize), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
+# plt.grid(True)
+# plt.legend(loc='best',fontsize='x-small')
+# plt.show()

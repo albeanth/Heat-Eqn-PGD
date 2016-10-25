@@ -31,7 +31,7 @@ def updateR(R,X,dx):
 
 def updateS(S,T,dt):
     s1=0.0; s2=0.0; s3=0.0; s4=np.zeros(len(T)); s5=np.zeros(len(T)) # note, that the first elem of s4 and s5 will ALWAYS be zero. attributed to initial guess being zeros.
-    for ids,dum in enumerate(S):
+    for ids in np.arange(0,len(S)):
         if ids == len(S)-1:
             pass
         else:
@@ -44,7 +44,7 @@ def updateS(S,T,dt):
                 s2 += 1/2*( S[ids+1]*(S[ids+1]-S[ids]) + S[ids]*(S[ids]-S[ids-1]) ) # Backward Euler on both derivatives, O(h)
     for ide,Elem in enumerate(T):
         # print(ide)
-        for cnt,pair in enumerate(zip(Elem,S)):
+        for cnt in np.arange(0,len(S)):
             if cnt == len(S)-1:
                 pass
             else:
@@ -58,7 +58,7 @@ def updateS(S,T,dt):
 
 def updateW(W,K,dk,k):
     w1=0.0; w2=0.0; w3=0.0; w4=np.zeros(len(K)); w5=np.zeros(len(K))
-    for idw,dum in enumerate(W):
+    for idw in np.arange(0,len(W)):
         if idw == len(W)-1:
             pass
         else:
@@ -66,7 +66,7 @@ def updateW(W,K,dk,k):
             w2 += dk/2*( k[idw+1]*math.pow(W[idw+1],2) + k[idw]*math.pow(W[idw],2) ) # O(h^2)
             w3 += dk/2*( W[idw+1] + W[idw] ) # O(h^2)
     for ide,Elem in enumerate(K):
-        for cnt in np.arange(0,len(W)-1):
+        for cnt in np.arange(0,len(W)):
             if cnt == len(W)-1:
                 pass
             else:
