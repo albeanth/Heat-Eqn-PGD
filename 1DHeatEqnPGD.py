@@ -1,11 +1,10 @@
 import sys,os
 import os.path
 import numpy as np
-# from scipy import linalg
 import math
 import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
 import basis
+import linecache
 
 try:
     from colorama import Fore, Back, Style, init
@@ -24,6 +23,8 @@ Ksize = 101
 
 k = np.linspace(1,5,Ksize) # W/(m*K)
 f = 1 # constant source term
+
+###############################################################################
 
 X = np.array([np.zeros(Xsize)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
 T = np.array([np.zeros(Tsize)],ndmin=2) # time domain
@@ -168,49 +169,58 @@ while eps_check > eps:
     eps_check = abs(NewSum/TotSum)
     print(Magenta+'   '+str(eps_check))
     # sys.exit()
+    enrCnt += 1
     if eps_check >= eps:
-        enrCnt += 1
         R_old = X[-1]
         S_old = T[-1]
         W_old = K[-1]
     else:
-        print(Green+'Done. It took '+str(enrCnt)+ ' enrichement steps to converge solution.\n')
+        print(Green+'Done. It took '+str(NumEnr)+ ' enrichement steps to converge solution.\n')
         break
 
+###############################################################################
 
-u_app = np.zeros(Xsize)
+print('\nFinding error of PGD solution as a function of enrichement step.')
+
+# PGDError = np.ones(NumEnr)
+# tmp = np.ones(NumEnr)
+# lst = os.listdir('./exact/Solutions/')
+# tmpStr = './exact/Solutions/'
+# for idx,item in enumerate(lst):
+#     ExSoln = np.ones((Tsize,Xsize))
+#     try:
+#         with open(tmpStr+item,'r') as file1:
+#             for cnt,line in enumerate(file1):
+#                 ExSoln[cnt] = line.split()
+#                 for idx,elem in enumerate(ExSoln[cnt]):
+#                     ExSoln[cnt][idx] = float(elem)
+#
+#     except FileNotFoundError:
+#         print(Red+'Text file '+str(tmpStr+item)+' with exact data not found. Please run \"exact.py\" and obtain data. (eventually this will be automated...)')
+#         sys.exit()
+
+PGDError = np.ones(NumEnr)
+Approx = np.ones(Tsize)
+lst = os.listdir('./exact/Solutions/')
+tmpStr = './exact/Solutions/'
 for ide in np.arange(0,len(X)):
-    for idx,x in enumerate(X[ide]):
-        u_app[idx] += x*T[ide][-1]*K[ide][-1] # will give solution as a function of space; at last time step and a thermal conductivity of 1.
-    print(u_app)
-for elem in u_app:
-    print(elem)
+    for idk,k in enumerate(K[:ide+1]):
+        ExSoln = np.ones((Tsize,Xsize))
+        try:
+            with open(tmpStr+lst[idk],'r') as file1:
+                for cnt,line in enumerate(file1):
+                    ExSoln[cnt] = line.split()
+                    for idx,elem in enumerate(ExSoln[cnt]):
+                        ExSoln[cnt][idx] = float(elem)
+        except FileNotFoundError:
+            print(Red+'Text file '+str(tmpStr+item)+' with exact data not found. Please run \"exact.py\" and obtain data. (eventually this will be automated...)')
+            sys.exit()
+        for idt,t in enumerate(T[:ide+1])
+            for idx,x in enumerate(X[:ide+1]):
+                Approx[idt] = x*t*k
+        PGDError[ide] += np.linalg.norm((ExSoln-Approx),2)
 
-# print('plots!')
-# plt.figure(1)
-# for cnt,elem in enumerate(X):
-#     if cnt == 0:
-#         pass
-#     else:
-#         plt.plot(np.linspace(0,1,Xsize), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
-# plt.grid(True)
-# plt.legend(loc='best',fontsize='x-small')
-#
-# plt.figure(2)
-# for cnt,elem in enumerate(T):
-#     if cnt == 0:
-#         pass
-#     else:
-#         plt.plot(np.linspace(0,0.1,Tsize), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
-# plt.grid(True)
-# plt.legend(loc='best',fontsize='x-small')
-#
-# plt.figure(3)
-# for cnt,elem in enumerate(K):
-#     if cnt == 0:
-#         pass
-#     else:
-#         plt.plot(np.linspace(1,5,Ksize), elem/max(abs(elem)), label = str(cnt), linewidth = 3)
-# plt.grid(True)
-# plt.legend(loc='best',fontsize='x-small')
-# plt.show()
+plt.figure(1)
+plt.plot(np.arange(1,len(PGDError_K1)+1),PGDError)
+plt.grid(True)
+plt.show()
