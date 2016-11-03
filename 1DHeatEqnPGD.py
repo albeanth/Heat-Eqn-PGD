@@ -47,7 +47,7 @@ W_new = np.ones(Ksize)
 
 ## convergence criteria
 eps = 1E-4 # num of enrichment steps - 2-norm
-nu = 1E-4 # within enrichemnt - inf-norm
+nu = 1E-5 # within enrichemnt - inf-norm
 
 NumEnr=0 # number of enrichment steps
 eps_check = 1.0
@@ -93,22 +93,27 @@ while eps_check > eps:
         # print('updatedR -> '+str(r1)+', '+str(r2)+', '+str(r3)+', '+str(r4)+', '+str(r5))
         # All 'w' integrals already solved for in R(x) solve. Don't need to resolve them.
 
-        for idy in np.arange(0,Tsize):
-            if idy == 0:
-                S_new[idy] = 0.0
-            else:
-                tmp = 0.0
-                for ide,Elem in enumerate(T):
-                    tmp += -(r5[ide]*w4[ide]*(Elem[idy]-Elem[idy-1])/dt) + Elem[idy-1]*w5[ide]*r4[ide]
-                S_new[idy] = (tmp + f*r3*w3 + S_new[idy-1]*w1*r1/dt)/(w1*r1/dt - w2*r2)
+        # for idy in np.arange(0,Tsize):
+        #     if idy == 0:
+        #         S_new[idy] = 0.0
+        #     else:
+        #         tmp = 0.0
+        #         for ide,Elem in enumerate(T):
+        #             tmp += r5[ide]*w4[ide]*(Elem[idy]-Elem[idy-1])/dt - Elem[idy]*w5[ide]*r4[ide]
+        #         S_new[idy] = (S_new[idy-1]*w1*r1/dt - tmp + w3*r3*f)/(w1*r1/dt - w2*r2)
         # print(S_new)
+
+        for idy in np.arange(0,Tsize-1):
+            tmp = 0.0
+            for ide,Elem in enumerate(T):
+                tmp += r5[ide]*w4[ide]*(Elem[idy+1]-Elem[idy])/dt - Elem[idy]*w5[ide]*r4[ide]
+            S_new[idy+1] = (S_new[idy]*w1*r1/dt - tmp + w3*r3*f)/(w1*r1/dt - w2*r2)
 
         #######################
         ##   Solve for W(k)  ##
         #######################
         # print('Solving for W(k)')
-        r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx)
-        # print('updatedR -> '+str(r1)+', '+str(r2)+', '+str(r3)+', '+str(r4)+', '+str(r5))
+        # All 'r' integrals already solved for in R(x) solve. Don't need to resolve them.
         s1,s2,s3,s4,s5 = basis.updateS(S_new,T,dt)
         # print('updatedS -> '+str(s1)+', '+str(s2)+', '+str(s3)+', '+str(s4)+', '+str(s5))
 
@@ -116,10 +121,9 @@ while eps_check > eps:
             tmp = 0.0
             for ide,Elem in enumerate(K): # each enrichment step
                 # print(Elem[idk],r5[ide],s4[ide],r4[ide],s5[ide])
-                tmp += -Elem[idk]*r5[ide]*s4[ide] + param*Elem[idk]*r4[ide]*s5[ide]
+                tmp += Elem[idk]*r5[ide]*s4[ide] - param*Elem[idk]*r4[ide]*s5[ide]
             # print(tmp, (f*r3*s3), r1*s2-param*s1*r2)
-            tmp += f*r3*s3
-            W_new[idk] = tmp/(r1*s2-param*s1*r2)
+            W_new[idk] = (-tmp + f*r3*s3)/(r1*s2-param*s1*r2)
         # print(W_new)
         #######################################
         ## Check for enrichment convergence  ##
@@ -136,12 +140,12 @@ while eps_check > eps:
                         pass
 
         print(Cyan+str(nu_check))
+        enrCnt += 1
         # sys.exit()
         if nu_check >= nu:
             R_old = R_new
             S_old = S_new
             W_old = W_new
-            enrCnt += 1
             # if enrCnt == 1:
             #     print(Red+'maximum iteration count reached.')
             #     X = np.vstack((X,R_new))
@@ -169,8 +173,9 @@ while eps_check > eps:
     eps_check = abs(NewSum/TotSum)
     print(Magenta+'   '+str(eps_check))
     # sys.exit()
-    enrCnt += 1
     if eps_check >= eps:
+        if NumEnr == 3:
+            break
         R_old = X[-1]
         S_old = T[-1]
         W_old = K[-1]
@@ -179,6 +184,47 @@ while eps_check > eps:
         break
 
 ###############################################################################
+
+def maxim(a):
+    maxx = 0
+    for elem in a:
+        if abs(elem)>maxx:
+            maxx = abs(elem)
+    return(maxx)
+
+print('plots!')
+plt.figure(1)
+for cnt,elem in enumerate(X):
+    if cnt == 0:
+        pass
+    else:
+        plt.plot(np.linspace(0,1,Xsize), -elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3)
+plt.grid(True)
+plt.legend(loc='best',fontsize='x-small')
+
+plt.figure(2)
+for cnt,elem in enumerate(T):
+    if cnt == 0:
+        pass
+    else:
+        plt.plot(np.linspace(0,0.1,Tsize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3)
+plt.grid(True)
+plt.legend(loc='best',fontsize='x-small')
+
+plt.figure(3)
+for cnt,elem in enumerate(K):
+    if cnt == 0:
+        pass
+    else:
+        plt.plot(np.linspace(1,5,Ksize), -elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3)
+plt.grid(True)
+plt.legend(loc='best',fontsize='x-small')
+plt.show()
+
+sys.exit()
+
+
+
 
 print('\nFinding error of PGD solution as a function of enrichement step.')
 
@@ -205,6 +251,7 @@ lst = os.listdir('./exact/Solutions/')
 tmpStr = './exact/Solutions/'
 for ide in np.arange(0,len(X)):
     for idk,k in enumerate(K[:ide+1]):
+        ## obtain exact solution for all space and time for corresponding conductivity value
         ExSoln = np.ones((Tsize,Xsize))
         try:
             with open(tmpStr+lst[idk],'r') as file1:
@@ -215,9 +262,10 @@ for ide in np.arange(0,len(X)):
         except FileNotFoundError:
             print(Red+'Text file '+str(tmpStr+item)+' with exact data not found. Please run \"exact.py\" and obtain data. (eventually this will be automated...)')
             sys.exit()
-        for idt,t in enumerate(T[:ide+1])
+        ##
+        for idt,t in enumerate(T[:ide+1]):
             for idx,x in enumerate(X[:ide+1]):
-                Approx[idt] = x*t*k
+                pass
         PGDError[ide] += np.linalg.norm((ExSoln-Approx),2)
 
 plt.figure(1)

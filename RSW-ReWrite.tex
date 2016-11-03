@@ -1,0 +1,113 @@
+\documentclass{article}
+\usepackage{../../latex_styles/standard-4}
+
+\def\ds{\displaystyle}
+\def\pd{\partial}
+\def\mb{\mathbf}
+\def\mbg{\boldsymbol}
+\def\grad{\mathbf\nabla}
+
+\begin{document}
+\section*{R(x)}
+\begin{align}
+R(x)\cdot w_1\cdot  s_2 - \grad^2 R(x)\cdot w_2\cdot  s_1 = \ds\sum_{j=1}^{n-1} \left( -w_4^j\cdot s_4^j\cdot X^j(x) + \grad^2 X^j(x)\cdot w_5^j\cdot s_5^j \right) + w_3\cdot s_3\cdot f
+\end{align}
+
+Using second order finite differences, we can discretize the above equation as follows:\\
+------------------------\\
+for $i=(0,61-1)$
+\begin{align}
+R_i & \cdot w_1\cdot  s_2 - \left( \frac{R_{i+1} - 2R_i + R_{i-1}}{\Delta x^2} \right) \cdot w_2\cdot  s_1 \nonumber\\
+= &\ds\sum_{j=1}^{n-1} \left( - X^j_i \cdot w_4^j\cdot s_4^j + \left( \frac{X^j_{i+1} - 2X^j_i + X^j_{i-1}}{\Delta x^2} \right) \cdot w_5^j\cdot s_5^j \right) + w_3\cdot s_3\cdot f
+\end{align}
+Rewriting the above:
+\begin{align}
+\label{eq::finalForm}
+&-R_{i-1} \frac{s_1 \cdot w_2}{\Delta x^2} + R_i \left( s_2 \cdot w_1 + \frac{2\;s_1 \cdot w_2}{\Delta x^2} \right) - R_{i+1} \frac{ s_1 \cdot w_2}{\Delta x^2} \nonumber \\
+= &\ds\sum_{j=1}^{n-1} \left( - X^j_i \cdot w_4^j\cdot s_4^j + \left( \frac{X^j_{i+1} - 2X^j_i + X^j_{i-1}}{\Delta x^2} \right) \cdot w_5^j\cdot s_5^j \right) + w_3\cdot s_3\cdot f
+\end{align}
+------------------------\\
+\vspace{-6pt}We can define the following constants and put Equation \ref{eq::finalForm} into matrix form :\\[-10pt]
+
+\hspace*{15pt}\begin{minipage}{4.5in}
+\begin{flalign*}
+v_1 &= -\frac{s_1 \cdot w_2}{\Delta x^2}\quad, \qquad v_2 = \frac{ 2\; s_1\cdot w_2}{\Delta x^2}+s_2\cdot w_1\quad, \qquad v_3 = v_1 \\[5pt]
+b & = \ds\sum_{j=1}^{n-1} \left( - X^j_i \cdot w_4^j\cdot s_4^j + \left( \frac{X^j_{i+1} - 2X^j_i + X^j_{i-1}}{\Delta x^2} \right) \cdot w_5^j\cdot s_5^j \right) + w_3\cdot s_3\cdot f
+\end{flalign*}
+\end{minipage}\vspace{5pt}
+
+\begin{equation}
+\begin{bmatrix}
+1    & 0    &  0        & \dots & 0 \\
+v_1    &  v_2    &  v_3    & \dots & 0 \\
+\vdots&  \ddots& \ddots & \ddots & \vdots  \\
+\vdots&  & v_1  & v_2   &  v_3 & \\
+0        & \dots&      0       &  0     & 1 &
+\end{bmatrix}
+\begin{bmatrix}
+R_0 \\ R_1 \\ \vdots \\R_{q-1} \\R_q
+\end{bmatrix}
+= \begin{bmatrix}
+0 \\ b_1 \\ \vdots \\ b_{q-1} \\ 0
+\end{bmatrix}
+\end{equation}
+
+\newpage
+\section*{S(t)}
+\begin{align}
+w_1 \cdot r_1 \cdot \frac{dS(t)}{dt} - w_2 \cdot r_2 \cdot S(t) = -\ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{dT^j(t)}{dt} - w_5^j \cdot r_4^j \cdot T^j(t) \right) + w_3 \cdot r_3 \cdot f
+\end{align}
+Using backward euler, we can discretize the above equation as follows:  \\
+------------------------\\
+for $i=1:(151-1)$ ; $S(i=0,t) = 0$ 
+\begin{align}
+w_1 \cdot r_1 & \left( \frac{S_{i+1} - S_i}{\Delta t} \right) - w_2 \cdot r_2 \cdot S_{i+1} \nonumber \\
+& = -\ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_i \right) + w_3 \cdot r_3 \cdot f
+\end{align}
+------------------------\\
+Can be rewritten as:
+\begin{align}
+S_{i+1} & \left( \frac{w_1 \cdot r_1}{\Delta t} - w_2 \cdot r_2 \right) - \frac{w_1 \cdot r_1}{\Delta t}S_i \nonumber \\ 
+& = - \ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_i \right) + w_3 \cdot r_3 \cdot f
+\end{align}
+
+And finally discretized in the following form:
+\begin{align}
+S_{i+1} =  \frac{\frac{w_1 \cdot r_1}{\Delta t}S_i - \ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_i \right) + w_3 \cdot r_3 \cdot f}{\left( \frac{w_1 \cdot r_1}{\Delta t} - w_2 \cdot r_2 \right)}
+\end{align}
+
+\section*{W(k)}
+Solving for W(k) is of an analytical form and can be represented as follows:  
+\begin{align}
+W(k) = \frac{ -\ds\sum_{j=1}^{n-1} \left( r_5^j \cdot s_4^j \cdot K^j(k) - r_4^j \cdot s_5^j \cdot k \cdot K^j(k) \right) + r_3 \cdot s_3 \cdot f }{r_1 \cdot s_2 - r_2 \cdot s_1 \cdot k}
+\end{align}
+
+\newpage
+\section*{Integral Evaluations}
+All of the following integrals are evaluated with the trapezoidal rule. Second order derivatives are approximated using second order finite differences. First order derivatives are approximated using backward differencing. 
+\begin{align*}
+\intertext{for i=(0,60-1)}
+r_1 &= \ds\int_{\Omega_x} R(x)^2 dx \: \approx \: \frac{\Delta x}{2} \left( R_{i+1}^2 + R_i^2 \right) \\[5pt]
+r_2 &= \int_{\Omega_x} R(x)\cdot\grad^2R(x) dx \: \approx \: \frac{1}{2\Delta x} \left( R_{i+1} \left( R_{i+2}-2R_{i+1}+R_{i} \right) + R_{i} \left( R_{i+1}-2R_{i}+R_{i-1} \right) \right)^*\\[5pt]
+r_3 &= \ds\int_{\Omega_x} R(x)dx \: \approx \: \frac{\Delta x}{2} (R_{i+1} + R_i) \\[5pt]
+r^j_4 &= \ds\int_{\Omega_x} R(x)\cdot\grad^2X^j(x) \: \approx \: \frac{1}{2\Delta x} \left( R_{i+1} \left( X^j_{i+2}-2X^j_{i+1}+X^j_{i}\right) + R_i \left(X^j_{i+1}-2X^j_i+X^j_{i-1}\right) \right)^*\\
+r^j_5 &= \ds\int_{\Omega_x} R(x) X^j(x) dx \: \approx \: \frac{\Delta x}{2} \left( R_{i+1}X^j_{i+1} + R_iX^j_i \right) \\[5pt]
+        &\text{\small{\emph{$\quad\:\:^*$ if $i=0$, $R_i=X^j_i=0$ or $i=59$, $R_{i+1}=X^j_{i+1}=0$}}} \\[25pt]
+\intertext{for i=(0,150-1)}
+s_1 &= \ds\int_{\Omega_t} S(t)^2 dt \: \approx \: \frac{\Delta t}{2} \left( S_{i+1}^2 + S_i^2 \right) \\[5pt]
+s_2 &= \ds\int_{\Omega_t} S(t)\frac{dS}{dt}dt \: \approx \: \frac{1}{2} \left( S_{i+1}\left( S_{i+1}-S_i \right) + S_i\left(S_i-S_{i-1}\right) \right) \\
+s_3 &= \ds\int_{\Omega_t} S(t) dt \: \approx \: \frac{\Delta t}{2} \left( S_{i+1} + S_i \right) \\[5pt]
+s^j_4 &= \ds\int_{\Omega_t} S(t)\frac{dT^j(t)}{dt} dt \: \approx \: \frac{1}{2} \left( S_{i+1} \left(T^j_{i+1}-T^j_i \right) + S_i\left(T^j_i-T^j_{i-1}\right) \right) \\[5pt]
+s^j_5 &= \ds\int_{\Omega_t}S(t)T^j(t) dt \: \approx \: \frac{\Delta t}{2} \left(S_{i+1}T^j_{i+1} + S_iT^j_i \right) \\[5pt]
+        &\text{\small{\emph{$\quad\:\:^*$ if $i=0$, $S_i=T^j_i=0$}}} \\[25pt]
+\intertext{for i=(0,100-1)}
+w_1 & = \ds\int_{\Omega_k} W(k)^2 dk \: \approx \: \frac{\Delta k}{2}\left(W_{i+1}^2 + W_i^2 \right)  \\[5pt]
+w_2 & = \ds\int_{\Omega_k} kW(k)^2 dk \: \approx \: \frac{\Delta k}{2}\left( k_{i+1}W_{i+1}^2+k_iW_i^2\right)   \\[5pt]
+w_3 & = \ds\int_{\Omega_k} W(k)dk \: \approx \: \frac{\Delta k}{2} \left( W_{i+1} + W_i \right) \\[5pt]
+w^j_4 & = \ds\int_{\Omega_k}W(k)K^j(k) dk \: \approx \: \frac{\Delta k}{2} \left(W_{i+1}K^j_{i+1} + W_iK^j_i \right) \\[5pt]
+w^j_5 & = \ds\int_{\Omega_k}kW(k)K^j(k)dk \: \approx \: \frac{\Delta k}{2} \left(k_{i+1}W_{i+1}K^j_{i+1} + k_iW_iK^j_i \right) \\[5pt]
+\end{align*}
+
+
+
+\end{document}
