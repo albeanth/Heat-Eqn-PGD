@@ -31,23 +31,13 @@ dk = (Krange)/(Ksize-1)
 k = np.linspace(1,5,Ksize) # W/(m*K)
 f = 1 # constant source term
 
+Max_fp_iter = 50
+
 ###############################################################################
 
 X = np.array([np.ones(Xsize)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
 T = np.array([np.ones(Tsize)],ndmin=2) # time domain
 K = np.array([np.ones(Ksize)],ndmin=2) # diffusivity domain
-
-## guesses for R,S,W
-R_old = np.ones(Xsize)
-R_old[0] = 0; R_old[-1] = 0
-
-S_old = np.ones(Tsize)
-S_old[0] = 0
-S_new = np.ones(Tsize)
-S_new[0] = 0
-
-W_old = np.ones(Ksize)
-W_new = np.ones(Ksize)
 
 ## convergence criteria
 eps = 1E-4 # num of enrichment steps - 2-norm
@@ -56,6 +46,9 @@ nu = 1E-8 # within enrichemnt - inf-norm
 NumEnr=0 # number of enrichment steps
 eps_check = 1.0
 while eps_check > eps:
+    NumEnr += 1 # counter for number of steps for enrichment step convergence
+    print('NumEnr = '+str(NumEnr))
+    # apparently, each iteration begins with a guess of ones.
     R_old = np.ones(Xsize)
     R_old[0] = 0; R_old[-1] = 0
 
@@ -69,16 +62,14 @@ while eps_check > eps:
 
     enrCnt=0 # number of steps for an enrichment step to converge
     nu_check=1
-    s1,s2,s3,s4,s5 = basis.updateS(S_old,T,dt)
-    print('s integrals = ')
-    print(s1,s2,s3,s4,s5)
+    s1,s2,s3,s4,s5 = basis.updateS(S_old,T,dt,NumEnr)
+    print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
     while nu_check >= nu:
         #######################
         ##   Solve for R(x)  ##
         #######################
-        w1,w2,w3,w4,w5 = basis.updateW(W_old,K,dk,k)
-        print('w integrals = ')
-        print(w1,w2,w3,w4,w5)
+        w1,w2,w3,w4,w5 = basis.updateW(W_old,K,dk,k,NumEnr)
+        print('w integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(w1,w2,w3)+str(w4)+' '+str(w5))
         v1 = -(s1*w2/(math.pow(dx,2)))
         v2 = s2*w1 + (2*s1*w2)/math.pow(dx,2)
         v3 = v1
@@ -104,9 +95,8 @@ while eps_check > eps:
         #######################
         ##   Solve for S(t)  ##
         #######################
-        r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx)
-        print('r integrals = ')
-        print(r1,r2,r3,r4,r5)
+        r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx,NumEnr)
+        print('r integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(r1,r2,r3)+str(r4)+' '+str(r5))
         # All 'w' integrals already solved for in R(x) solve. Don't need to resolve them.
 
         for idy in np.arange(0,Tsize-1):
@@ -119,9 +109,8 @@ while eps_check > eps:
         ##   Solve for W(k)  ##
         #######################
         # All 'r' integrals already solved for in R(x) solve. Don't need to resolve them.
-        s1,s2,s3,s4,s5 = basis.updateS(S_new,T,dt)
-        print('s integrals = ')
-        print(s1,s2,s3,s4,s5)
+        s1,s2,s3,s4,s5 = basis.updateS(S_new,T,dt,NumEnr)
+        print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
         for idk,param in enumerate(k): # each element in conductivity range
             tmp = 0.0
             for ide,Elem in enumerate(K): # each enrichment step
@@ -188,30 +177,38 @@ while eps_check > eps:
         print(Cyan+str(nu_check))
         enrCnt += 1
         if nu_check >= nu:
+            if enrCnt > Max_fp_iter:
+                print(Red+'\nThe maximum number of iterations reached. Passing onto next enrichment step.\n'); break
             R_old = R_new
             S_old = S_new
             W_old = W_new
         else:
-            NumEnr += 1 # counter for number of steps for enrichment step convergence
-            print(Green+'Enrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.')
-            R_new_Norm = math.sqrt(intR_new/(Xrange**2))
-            S_new_Norm = math.sqrt(intS_new/(Trange**2))
-            W_new_Norm = math.sqrt(intW_new/(Krange**2))
-            RSW_new = math.pow((R_new_Norm*S_new_Norm*W_new_Norm),1/3)
-            print(R_new_Norm,S_new_Norm,W_new_Norm,RSW_new)
-            X = np.vstack((X,RSW_new*R_new/R_new_Norm))
-            T = np.vstack((T,RSW_new*S_new/S_new_Norm))
-            K = np.vstack((K,RSW_new*W_new/W_new_Norm))
+            break
+
+    print(Green+'Enrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.')
+    R_new_Norm = math.sqrt(intR_new/(Xrange**2))
+    S_new_Norm = math.sqrt(intS_new/(Trange**2))
+    W_new_Norm = math.sqrt(intW_new/(Krange**2))
+    RSW_new = math.pow((R_new_Norm*S_new_Norm*W_new_Norm),1/3)
+    print(R_new_Norm,S_new_Norm,W_new_Norm,RSW_new)
+    if NumEnr == 1:
+        X[0] = RSW_new*R_new/R_new_Norm
+        T[0] = RSW_new*S_new/S_new_Norm
+        K[0] = RSW_new*W_new/W_new_Norm
+    else:
+        X = np.vstack((X,RSW_new*R_new/R_new_Norm))
+        T = np.vstack((T,RSW_new*S_new/S_new_Norm))
+        K = np.vstack((K,RSW_new*W_new/W_new_Norm))
     print(Yellow+'   ....checking enrichment convergence')
 
     ## actual convergence
     R1 = 0.0; S1 = 0.0; W1 = 0.0
     for idr in np.arange(0,Xsize-1):
-        R1 += dx/2*(X[1][idr+1]**2 + X[1][idr]**2)
+        R1 += dx/2*(X[0][idr+1]**2 + X[0][idr]**2)
     for ids in np.arange(0,Tsize-1):
-        S1 += dt/2*(T[1][ids+1]**2 + T[1][ids]**2)
+        S1 += dt/2*(T[0][ids+1]**2 + T[0][ids]**2)
     for idw in np.arange(0,Ksize-1):
-        W1 += dk/2*(K[1][idw+1]**2 + K[1][idw]**2)
+        W1 += dk/2*(K[0][idw+1]**2 + K[0][idw]**2)
     eps_check = math.sqrt(intR_new*intS_new*intW_new)/math.sqrt(R1*S1*W1)
 
     ## tony's interpretation
@@ -226,7 +223,7 @@ while eps_check > eps:
     # eps_check = NewSum/TotSum
     print(Magenta+'   '+str(eps_check))
     if eps_check >= eps:
-        if NumEnr == 3:
+        if NumEnr == 4:
             break
         # R_old = X[-1]
         # S_old = T[-1]
@@ -236,10 +233,6 @@ while eps_check > eps:
         break
 
 ###############################################################################
-print(X)
-print(T)
-print(K)
-sys.exit()
 
 def norm(Vec,size,stp):
     tmp = 0.0
@@ -251,19 +244,19 @@ print('plots!')
 
 
 plt.figure(1)
-for cnt,elem in enumerate(X[1:]):
+for cnt,elem in enumerate(X):
     plt.plot(np.linspace(0,1,Xsize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3) #elem/norm(elem,Xsize,dx)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
 
 plt.figure(2)
-for cnt,elem in enumerate(T[1:]):
+for cnt,elem in enumerate(T):
     plt.plot(np.linspace(0,0.1,Tsize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3) #elem/norm(elem,Tsize,dt)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
 
 plt.figure(3)
-for cnt,elem in enumerate(K[1:]):
+for cnt,elem in enumerate(K):
     plt.plot(np.linspace(1,5,Ksize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3) #elem/norm(elem,Ksize,dk)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
