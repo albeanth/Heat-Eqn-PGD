@@ -5,6 +5,7 @@ import math
 import matplotlib.pyplot as plt
 import basis
 import linecache
+from tqdm import tqdm
 
 try:
     from colorama import Fore, Back, Style, init
@@ -32,7 +33,7 @@ k = np.linspace(1,5,Ksize) # W/(m*K)
 f = 1 # constant source term
 
 Max_fp_iter = 50
-
+MaxEnr = 25
 ###############################################################################
 
 X = np.array([np.ones(Xsize)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
@@ -47,7 +48,6 @@ NumEnr=0 # number of enrichment steps
 eps_check = 1.0
 while eps_check > eps:
     NumEnr += 1 # counter for number of steps for enrichment step convergence
-    print('NumEnr = '+str(NumEnr))
     # apparently, each iteration begins with a guess of ones.
     R_old = np.ones(Xsize)
     R_old[0] = 0; R_old[-1] = 0
@@ -63,13 +63,13 @@ while eps_check > eps:
     enrCnt=0 # number of steps for an enrichment step to converge
     nu_check=1
     s1,s2,s3,s4,s5 = basis.updateS(S_old,T,dt,NumEnr)
-    print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
+    # print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
     while nu_check >= nu:
         #######################
         ##   Solve for R(x)  ##
         #######################
         w1,w2,w3,w4,w5 = basis.updateW(W_old,K,dk,k,NumEnr)
-        print('w integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(w1,w2,w3)+str(w4)+' '+str(w5))
+        # print('w integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(w1,w2,w3)+str(w4)+' '+str(w5))
         v1 = -(s1*w2/(math.pow(dx,2)))
         v2 = s2*w1 + (2*s1*w2)/math.pow(dx,2)
         v3 = v1
@@ -96,7 +96,7 @@ while eps_check > eps:
         ##   Solve for S(t)  ##
         #######################
         r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx,NumEnr)
-        print('r integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(r1,r2,r3)+str(r4)+' '+str(r5))
+        # print('r integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(r1,r2,r3)+str(r4)+' '+str(r5))
         # All 'w' integrals already solved for in R(x) solve. Don't need to resolve them.
 
         for idy in np.arange(0,Tsize-1):
@@ -110,7 +110,7 @@ while eps_check > eps:
         #######################
         # All 'r' integrals already solved for in R(x) solve. Don't need to resolve them.
         s1,s2,s3,s4,s5 = basis.updateS(S_new,T,dt,NumEnr)
-        print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
+        # print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
         for idk,param in enumerate(k): # each element in conductivity range
             tmp = 0.0
             for ide,Elem in enumerate(K): # each enrichment step
@@ -174,23 +174,24 @@ while eps_check > eps:
         # # nu_check = Num/Denom
         # nu_check = Num
 
-        print(Cyan+str(nu_check))
+        # print(Cyan+str(nu_check))
         enrCnt += 1
         if nu_check >= nu:
-            if enrCnt > Max_fp_iter:
-                print(Red+'\nThe maximum number of iterations reached. Passing onto next enrichment step.\n'); break
+            if enrCnt > Max_fp_iter-1:
+                print(Red+'\nThe maximum number of iterations reached. Passing onto next enrichment step.'); break
             R_old = R_new
             S_old = S_new
             W_old = W_new
         else:
             break
 
-    print(Green+'Enrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.')
+    ## Enrichment step has converged, tack it onto to X, T, and K and check the overal convergence
+    print('\nEnrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.')
     R_new_Norm = math.sqrt(intR_new/(Xrange**2))
     S_new_Norm = math.sqrt(intS_new/(Trange**2))
     W_new_Norm = math.sqrt(intW_new/(Krange**2))
     RSW_new = math.pow((R_new_Norm*S_new_Norm*W_new_Norm),1/3)
-    print(R_new_Norm,S_new_Norm,W_new_Norm,RSW_new)
+    # print(R_new_Norm,S_new_Norm,W_new_Norm,RSW_new)
     if NumEnr == 1:
         X[0] = RSW_new*R_new/R_new_Norm
         T[0] = RSW_new*S_new/S_new_Norm
@@ -199,9 +200,11 @@ while eps_check > eps:
         X = np.vstack((X,RSW_new*R_new/R_new_Norm))
         T = np.vstack((T,RSW_new*S_new/S_new_Norm))
         K = np.vstack((K,RSW_new*W_new/W_new_Norm))
-    print(Yellow+'   ....checking enrichment convergence')
+    # print(Yellow+'   ....checking enrichment convergence')
 
-    ## actual convergence
+    ###############################################
+    ## Check for overall enrichment convergence  ##
+    ###############################################
     R1 = 0.0; S1 = 0.0; W1 = 0.0
     for idr in np.arange(0,Xsize-1):
         R1 += dx/2*(X[0][idr+1]**2 + X[0][idr]**2)
@@ -221,102 +224,128 @@ while eps_check > eps:
     #                 if enr == len(X)-1:
     #                     NewSum += abs(X[enr][idr]*T[enr][idt]*K[enr][idk])
     # eps_check = NewSum/TotSum
-    print(Magenta+'   '+str(eps_check))
+
+    print(Yellow+'Error = '+str(eps_check))
     if eps_check >= eps:
-        if NumEnr == 4:
-            break
-        # R_old = X[-1]
-        # S_old = T[-1]
-        # W_old = K[-1]
+        if NumEnr == MaxEnr:
+            print(Red+'\nThe maximum number of enrichment iterations reached. Solution error is '+str(eps_check)+'\n'); break
     else:
-        print(Green+'Done. It took '+str(NumEnr)+ ' enrichement steps to converge solution.\n')
+        print(Green+'Done. It took '+str(NumEnr)+ ' enrichment steps to converge solution.\n')
         break
 
 ###############################################################################
 
-def norm(Vec,size,stp):
+def normSqRt(Vec,size,stp):
+    tmp = 0.0
+    for idx in np.arange(0,size-1):
+        tmp += stp/2*(Vec[idx+1]**2 + Vec[idx]**2)
+    return(math.sqrt(tmp))
+
+print('plots!')
+
+###############################
+## Plot enrichment functions ##
+###############################
+
+plt.figure(1)
+for cnt,elem in enumerate(X[0:4]):
+    plt.plot(np.linspace(0,1,Xsize), elem/normSqRt(elem,Xsize,dx), label = str(cnt), linewidth = 3) #elem/norm(elem,Xsize,dx)
+plt.grid(True)
+plt.legend(loc='best',fontsize='x-small')
+
+plt.figure(2)
+for cnt,elem in enumerate(T[0:4]):
+    plt.plot(np.linspace(0,0.1,Tsize), elem/normSqRt(elem,Tsize,dt), label = str(cnt), linewidth = 3) #elem/norm(elem,Tsize,dt)
+plt.grid(True)
+plt.legend(loc='best',fontsize='x-small')
+
+plt.figure(3)
+for cnt,elem in enumerate(K[0:4]):
+    plt.plot(np.linspace(1,5,Ksize), elem/normSqRt(elem,Ksize,dk), label = str(cnt), linewidth = 3) #elem/norm(elem,Ksize,dk)
+plt.grid(True)
+plt.legend(loc='best',fontsize='x-small')
+
+#################################
+## Writeout X,T,K data to file ##
+#################################
+
+fileout = open('data.txt','w')
+for idx in np.arange(0,Xsize):
+    for enr in np.arange(0,len(X)):
+        fileout.write(str(X[enr][idx])+'\t')
+    fileout.write('\n')
+
+fileout.write('\n\n')
+for ids in np.arange(0,Tsize):
+    for enr in np.arange(0,len(T)):
+        fileout.write(str(T[enr][ids])+'\t')
+    fileout.write('\n')
+
+fileout.write('\n\n')
+for idk in np.arange(0,Ksize):
+    for enr in np.arange(0,len(K)):
+        fileout.write(str(K[enr][idk])+'\t')
+    fileout.write('\n')
+
+fileout.close()
+
+################################################
+## Plot PGD Error as a function of Enrichment ##
+################################################
+
+print('\nFinding error of PGD solution as a function of enrichment step.')
+
+def SubLists(a,b):
+    c = np.zeros(len(a))
+    for idx in np.arange(0,len(a)):
+        c[idx] = a[idx]-b[idx]
+    return(c)
+
+def normSq(Vec,size,stp):
     tmp = 0.0
     for idx in np.arange(0,size-1):
         tmp += stp/2*(Vec[idx+1]**2 + Vec[idx]**2)
     return(tmp)
 
-print('plots!')
+def norm(Vec,size,stp):
+    tmp = 0.0
+    for idx in np.arange(0,size-1):
+        tmp += stp/2*(Vec[idx+1] + Vec[idx])
+    return(tmp)
 
-
-plt.figure(1)
-for cnt,elem in enumerate(X):
-    plt.plot(np.linspace(0,1,Xsize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3) #elem/norm(elem,Xsize,dx)
-plt.grid(True)
-plt.legend(loc='best',fontsize='x-small')
-
-plt.figure(2)
-for cnt,elem in enumerate(T):
-    plt.plot(np.linspace(0,0.1,Tsize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3) #elem/norm(elem,Tsize,dt)
-plt.grid(True)
-plt.legend(loc='best',fontsize='x-small')
-
-plt.figure(3)
-for cnt,elem in enumerate(K):
-    plt.plot(np.linspace(1,5,Ksize), elem/np.linalg.norm(elem,2), label = str(cnt), linewidth = 3) #elem/norm(elem,Ksize,dk)
-plt.grid(True)
-plt.legend(loc='best',fontsize='x-small')
-
-plt.show()
-
-# fileout = open('dum.txt','w')
-# fileout.write(str(X)+'\n\n')
-# fileout.write(str(T)+'\n\n')
-# fileout.write(str(K)+'\n\n')
-# fileout.close()
-
-sys.exit()
-
-
-
-
-print('\nFinding error of PGD solution as a function of enrichement step.')
-
-# PGDError = np.ones(NumEnr)
-# tmp = np.ones(NumEnr)
-# lst = os.listdir('./exact/Solutions/')
-# tmpStr = './exact/Solutions/'
-# for idx,item in enumerate(lst):
-#     ExSoln = np.ones((Tsize,Xsize))
-#     try:
-#         with open(tmpStr+item,'r') as file1:
-#             for cnt,line in enumerate(file1):
-#                 ExSoln[cnt] = line.split()
-#                 for idx,elem in enumerate(ExSoln[cnt]):
-#                     ExSoln[cnt][idx] = float(elem)
-#
-#     except FileNotFoundError:
-#         print(Red+'Text file '+str(tmpStr+item)+' with exact data not found. Please run \"exact.py\" and obtain data. (eventually this will be automated...)')
-#         sys.exit()
-
+ErrTmp1 = np.ones(Tsize)
+ErrTmp2 = np.ones((NumEnr,Ksize))
 PGDError = np.ones(NumEnr)
-Approx = np.ones(Tsize)
-lst = os.listdir('./exact/Solutions/')
-tmpStr = './exact/Solutions/'
-for ide in np.arange(0,len(X)):
-    for idk,k in enumerate(K[:ide+1]):
-        ## obtain exact solution for all space and time for corresponding conductivity value
-        ExSoln = np.ones((Tsize,Xsize))
-        try:
-            with open(tmpStr+lst[idk],'r') as file1:
-                for cnt,line in enumerate(file1):
-                    ExSoln[cnt] = line.split()
-                    for idx,elem in enumerate(ExSoln[cnt]):
-                        ExSoln[cnt][idx] = float(elem)
-        except FileNotFoundError:
-            print(Red+'Text file '+str(tmpStr+item)+' with exact data not found. Please run \"exact.py\" and obtain data. (eventually this will be automated...)')
-            sys.exit()
-        ##
-        for idt,t in enumerate(T[:ide+1]):
-            for idx,x in enumerate(X[:ide+1]):
-                pass
-        PGDError[ide] += np.linalg.norm((ExSoln-Approx),2)
+lst = os.listdir('./exact/Solutions-200/')
+tmpStr = './exact/Solutions-200/'
+for idk,filename in enumerate(tqdm(lst)):
+    ## obtain exact solution for all space and time for corresponding conductivity value
+    ExSoln = np.ones((Tsize,Xsize))
+    try:
+        with open(tmpStr+filename,'r') as filein:
+            for idt,line in enumerate(filein):
+                tmp = line.split()
+                for idx,elem in enumerate(tmp):
+                    ExSoln[idt][idx] = float(elem)
+    except FileNotFoundError:
+        print(Red+'Text file '+str(tmpStr+item)+' with exact data not found. Please run \"exact.py\" and obtain data. (eventually this will be automated...)')
+        sys.exit()
+    #######
+    for enr in tqdm(np.arange(0,NumEnr)):
+        Approx = np.zeros((Tsize,Xsize))
+        for idt,t in enumerate(T[enr]):
+            for idx,x in enumerate(X[enr]):
+                Approx[idt][idx] += t*x*K[enr][idk]
+            dum1 = SubLists(ExSoln[idt],Approx[idt]) # gets difference between exact and approximated solution for space at a given time step`
+            ErrTmp1[idt] = normSq(dum1,Xsize,dx) # integrate over space to obtain a 1D vector of error as a function of time for that enrichment step and conductivity.
+        ErrTmp2[enr,idk] = norm(ErrTmp1,Tsize,dt) # integrate over time to obtain a 2D vector that has error as a function of enrichment and conductivity value
 
-plt.figure(1)
-plt.plot(np.arange(1,len(PGDError_K1)+1),PGDError)
+for enr,elem in enumerate(ErrTmp2): # pass each column
+    PGDError[enr]=norm(elem,Ksize,dk) # once ErrTmp2 is full, you have the space and time integrated error as a function of conductivity and enrichment step. So integrate out the conductivity and you will have error as a fucntion of enrichment.
+
+
+plt.figure(4)
+plt.semilogy(np.arange(1,NumEnr+1),PGDError)
 plt.grid(True)
 plt.show()
+sys.exit()
