@@ -17,6 +17,33 @@ except ImportError:
     Yellow=''; Red=''; Green=''; Cyan=''; Magenta = ''
     StyDim='';
 
+IntegralsOut = open('integrals.txt','w')
+
+## General Functions
+def SubLists(a,b):
+    c = np.zeros(len(a))
+    for idx in np.arange(0,len(a)):
+        c[idx] = a[idx]-b[idx]
+    return(c)
+
+def normSqRt(Vec,size,stp):
+    tmp = 0.0
+    for idx in np.arange(0,size-1):
+        tmp += stp/2*(Vec[idx+1]**2 + Vec[idx]**2)
+    return(math.sqrt(tmp))
+
+def normSq(Vec,size,stp):
+    tmp = 0.0
+    for idx in np.arange(0,size-1):
+        tmp += stp/2*(Vec[idx+1]**2 + Vec[idx]**2)
+    return(tmp)
+
+def norm(Vec,size,stp):
+    tmp = 0.0
+    for idx in np.arange(0,size-1):
+        tmp += stp/2*(Vec[idx+1] + Vec[idx])
+    return(tmp)
+
 ## Initializing Info
 Xsize = 61
 Tsize = 151
@@ -30,7 +57,7 @@ dt = (Trange)/(Tsize-1)
 dk = (Krange)/(Ksize-1)
 
 k = np.linspace(1,5,Ksize) # W/(m*K)
-f = 1 # constant source term
+f = 1.0 # constant source term
 
 Max_fp_iter = 50
 MaxEnr = 25
@@ -39,6 +66,9 @@ MaxEnr = 25
 X = np.array([np.ones(Xsize)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
 T = np.array([np.ones(Tsize)],ndmin=2) # time domain
 K = np.array([np.ones(Ksize)],ndmin=2) # diffusivity domain
+# Xno = np.array([np.ones(Xsize)],ndmin=2) # spatial domain -> calculated values for R for first iteration are independent of this first initial guess. tested with parabolic and linear inital shapes and same X_i+1 result was obtained.
+# Tno = np.array([np.ones(Tsize)],ndmin=2) # time domain
+# Kno = np.array([np.ones(Ksize)],ndmin=2) # diffusivity domain
 
 ## convergence criteria
 eps = 1E-4 # num of enrichment steps - 2-norm
@@ -50,26 +80,43 @@ while eps_check > eps:
     NumEnr += 1 # counter for number of steps for enrichment step convergence
     # apparently, each iteration begins with a guess of ones.
     R_old = np.ones(Xsize)
-    R_old[0] = 0; R_old[-1] = 0
+    R_old[0] = 0.0; R_old[-1] = 0.0
 
     S_old = np.ones(Tsize)
-    S_old[0] = 0
-    S_new = np.ones(Tsize)
-    S_new[0] = 0
+    S_old[0] = 0.0
 
     W_old = np.ones(Ksize)
-    W_new = np.ones(Ksize)
 
     enrCnt=0 # number of steps for an enrichment step to converge
     nu_check=1
     s1,s2,s3,s4,s5 = basis.updateS(S_old,T,dt,NumEnr)
-    # print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
+    # print('\ns integrals = {0:.12e}, {1:.12e}, {2:.12e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
+    # IntegralsOut.write('\n\nBEGIN STEP NUMBER '+str(NumEnr)+'\n')
+    # IntegralsOut.write('s1 = {0:.12e}, s2 = {1:.12e}, s3 = {2:.12e}, '.format(s1,s2,s3))
+    # IntegralsOut.write('s4 = ')
+    # for elem in s4:
+    #     IntegralsOut.write('{0:.12e}, '.format(elem))
+    # IntegralsOut.write('s5 = ')
+    # for elem in s5:
+    #     IntegralsOut.write('{0:.12e}, '.format(elem))
+
     while nu_check >= nu:
+        S_new = np.ones(Tsize)
+        S_new[0] = 0.0
+        W_new = np.ones(Ksize)
         #######################
         ##   Solve for R(x)  ##
         #######################
         w1,w2,w3,w4,w5 = basis.updateW(W_old,K,dk,k,NumEnr)
-        # print('w integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(w1,w2,w3)+str(w4)+' '+str(w5))
+        # print('w integrals = {0:.12e}, {1:.12e}, {2:.12e}, '.format(w1,w2,w3)+str(w4)+' '+str(w5))
+        # IntegralsOut.write('\nw1 = {0:.12e}, w2 = {1:.12e}, w3 = {2:.12e}, '.format(w1,w2,w3))
+        # IntegralsOut.write('w4 = ')
+        # for elem in w4:
+        #     IntegralsOut.write('{0:.12e}, '.format(elem))
+        # IntegralsOut.write('w5 = ')
+        # for elem in w5:
+        #     IntegralsOut.write('{0:.12e}, '.format(elem))
+
         v1 = -(s1*w2/(math.pow(dx,2)))
         v2 = s2*w1 + (2*s1*w2)/math.pow(dx,2)
         v3 = v1
@@ -89,33 +136,81 @@ while eps_check > eps:
         R_Lmatrix[-1,:] = [0.0]
         R_Lmatrix[-1,-1] = 1.0
 
-        R_new = np.dot(np.linalg.inv(R_Lmatrix),b)
-        # R_new = np.linalg.solve(R_Lmatrix,b)
+        R_new = np.linalg.solve(R_Lmatrix,b)
+        R_new[0] = 0.0
 
         #######################
         ##   Solve for S(t)  ##
         #######################
         r1,r2,r3,r4,r5 = basis.updateR(R_new,X,dx,NumEnr)
         # print('r integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(r1,r2,r3)+str(r4)+' '+str(r5))
+        # IntegralsOut.write('\nr1 = {0:.12e}, r2 = {1:.12e}, r3 = {2:.12e}, '.format(r1,r2,r3))
+        # IntegralsOut.write('r4 = ')
+        # for elem in r4:
+        #     IntegralsOut.write('{0:.12e}, '.format(elem))
+        # IntegralsOut.write('r5 = ')
+        # for elem in r5:
+        #     IntegralsOut.write('{0:.12e}, '.format(elem))
         # All 'w' integrals already solved for in R(x) solve. Don't need to resolve them.
 
+        # for idy in np.arange(0,Tsize-1):
+        #     tmp = 0.0
+        #     for ide,Elem in enumerate(T):
+        #         tmp += r5[ide]*w4[ide]*(Elem[idy+1]-Elem[idy])/dt - Elem[idy+1]*w5[ide]*r4[ide]
+        #     S_new[idy+1] = (S_new[idy]*w1*r1/dt - tmp + w3*r3*f)/(w1*r1/dt - w2*r2)
+
+        RHS_S = np.zeros(Tsize)
         for idy in np.arange(0,Tsize-1):
-            tmp = 0.0
+            RHS_S[idy+1] = w3*r3*f
             for ide,Elem in enumerate(T):
-                tmp += r5[ide]*w4[ide]*(Elem[idy+1]-Elem[idy])/dt - Elem[idy+1]*w5[ide]*r4[ide]
-            S_new[idy+1] = (S_new[idy]*w1*r1/dt - tmp + w3*r3*f)/(w1*r1/dt - w2*r2)
+                RHS_S[idy+1] += -r5[ide]*w4[ide]*(Elem[idy+1]-Elem[idy])/dt + Elem[idy+1]*w5[ide]*r4[ide]
+            # RHS_S[idy+1] += w3*r3*f
+
+        u1 = -w1*r1/dt
+        u2 = w1*r1/dt - w2*r2
+        S_Lmatrix = u1*np.eye(Tsize,k=-1) + u2*np.eye(Tsize,k=0)
+        S_Lmatrix[0,:] = [0.0]
+        S_Lmatrix[0,0] = 1.0
+        S_new = np.linalg.solve(S_Lmatrix,RHS_S)
 
         #######################
         ##   Solve for W(k)  ##
         #######################
         # All 'r' integrals already solved for in R(x) solve. Don't need to resolve them.
         s1,s2,s3,s4,s5 = basis.updateS(S_new,T,dt,NumEnr)
-        # print('s integrals = {0:.8e}, {1:.8e}, {2:.8e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
+        # print('s integrals = {0:.12e}, {1:.12e}, {2:.12e}, '.format(s1,s2,s3)+str(s4)+' '+str(s5))
+        # IntegralsOut.write('\ns1 = {0:.12e}, s2 = {1:.12e}, s3 = {2:.12e}, '.format(s1,s2,s3))
+        # IntegralsOut.write('s4 = ')
+        # for elem in s4:
+        #     IntegralsOut.write('{0:.12e}, '.format(elem))
+        # IntegralsOut.write('s5 = ')
+        # for elem in s5:
+        #     IntegralsOut.write('{0:.12e}, '.format(elem))
+        # IntegralsOut.write('\n\n')
+
+        # for idk,param in enumerate(k): # each element in conductivity range
+        #     tmp = f*r3*s3
+        #     for ide,Elem in enumerate(K): # each enrichment step
+        #         tmp += -Elem[idk]*r5[ide]*s4[ide] + param*Elem[idk]*r4[ide]*s5[ide]
+        #     W_new[idk] = tmp/(r1*s2-param*s1*r2)
+            # print('{0:.12e} {1:.12e} {2:.12e}'.format(tmp,r1*s2-param*s1*r2,W_new[idk]))
+            # if (NumEnr == 11) or (NumEnr == 6):
+            #     print('W_new['+str(idk)+'] = {0:.8e} / {1:.8e}'.format(-tmp + f*r3*s3, r1*s2-param*s1*r2))
+        # print('\n{0:.12e} {1:.12e} {2:.12e} {3:.12e} '.format(r1,s2,r2,s1))
+        # print('\n')
+
+        RHS_W = np.zeros(Ksize)
         for idk,param in enumerate(k): # each element in conductivity range
-            tmp = 0.0
+            RHS_W[idk] = f*r3*s3
             for ide,Elem in enumerate(K): # each enrichment step
-                tmp += Elem[idk]*r5[ide]*s4[ide] - param*Elem[idk]*r4[ide]*s5[ide]
-            W_new[idk] = (-tmp + f*r3*s3)/(r1*s2-param*s1*r2)
+                RHS_W[idk] += -Elem[idk]*r5[ide]*s4[ide] + param*Elem[idk]*r4[ide]*s5[ide]
+            # RHS_W[idk] += f*r3*s3
+
+        W_Lmatrix = np.zeros((Ksize,Ksize))
+        for idt in np.arange(0,Ksize):
+            W_Lmatrix[idt][idt] = r1*s2 - r2*s1*k[idt]
+
+        W_new = np.linalg.solve(W_Lmatrix,RHS_W)
 
         #######################################
         ## Check for enrichment convergence  ##
@@ -127,66 +222,36 @@ while eps_check > eps:
             intR_new += dx/2*(R_new[idr+1]**2 + R_new[idr]**2)
             intR_old += dx/2*(R_old[idr+1]**2 + R_old[idr]**2)
             intR_both += dx/2*(R_new[idr+1]*R_old[idr+1]+R_new[idr]*R_old[idr])
-        # print('convergence params \n',str(intR_new), str(intR_old), str(intR_both))
-        # sys.exit()
 
         intS_new=0.0; intS_old=0.0; intS_both = 0.0
         for ids in np.arange(0,Tsize-1):
             intS_new += dt/2*(S_new[ids+1]**2 + S_new[ids]**2)
             intS_old += dt/2*(S_old[ids+1]**2 + S_old[ids]**2)
             intS_both += dt/2*(S_new[ids+1]*S_old[ids+1]+S_new[ids]*S_old[ids])
-        # print(intS_new, intS_old, intS_both)
-        # sys.exit()
 
         intW_new=0.0; intW_old=0.0; intW_both = 0.0
         for idw in np.arange(0,Ksize-1):
             intW_new += dk/2*(W_new[idw+1]**2 + W_new[idw]**2)
             intW_old += dk/2*(W_old[idw+1]**2 + W_old[idw]**2)
             intW_both += dk/2*(W_new[idw+1]*W_old[idw+1]+W_new[idw]*W_old[idw])
-        # print(intW_new, intW_old, intW_both)
-        # sys.exit()
 
-        # print((intR_new*intS_new*intW_new) + (intR_old*intS_old*intW_old))
-        # print(2*(intR_both*intS_both*intW_both))
-        # sys.exit()
         nu_check = math.sqrt( (intR_new*intS_new*intW_new) + (intR_old*intS_old*intW_old) - 2*(intR_both*intS_both*intW_both) )
-
-        ## palmer's interpretation
-        # nu_check = 0.0
-        # for idr in np.arange(0,Xsize):
-        #     for ids in np.arange(0,Tsize):
-        #         for idw in np.arange(0,Ksize):
-        #             tmp = abs(R_new[idr]*S_new[ids]*W_new[idw] - R_old[idr]*S_old[ids]*W_old[idw])
-        #             if tmp > nu_check:
-        #                 nu_check = tmp
-        #             else:
-        #                 pass
-        #
-        ## tony's interpretation
-        # Num = 0.0; Denom = 0.0
-        # for xNew,xOld in zip(R_new,R_old):
-        #     for tNew,tOld in zip(S_new,S_old):
-        #         for kNew,kOld in zip(W_new,W_old):
-        #             new = xNew*tNew*kNew
-        #             old = xOld*tOld*kOld
-        #             Num += abs(new - old)
-        #             # Denom += abs(old)
-        # # nu_check = Num/Denom
-        # nu_check = Num
 
         # print(Cyan+str(nu_check))
         enrCnt += 1
         if nu_check >= nu:
             if enrCnt > Max_fp_iter-1:
-                print(Red+'\nThe maximum number of iterations reached. Passing onto next enrichment step.'); break
+                print(Red+'\nThe maximum number of iterations reached. Passing onto next enrichment step.')
+                print('Enrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.');
+                break
             R_old = R_new
             S_old = S_new
             W_old = W_new
         else:
+            print('\nEnrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.')
             break
 
     ## Enrichment step has converged, tack it onto to X, T, and K and check the overal convergence
-    print('\nEnrichment Step '+str(NumEnr)+' completed in '+str(enrCnt)+' steps.')
     R_new_Norm = math.sqrt(intR_new/(Xrange**2))
     S_new_Norm = math.sqrt(intS_new/(Trange**2))
     W_new_Norm = math.sqrt(intW_new/(Krange**2))
@@ -196,10 +261,16 @@ while eps_check > eps:
         X[0] = RSW_new*R_new/R_new_Norm
         T[0] = RSW_new*S_new/S_new_Norm
         K[0] = RSW_new*W_new/W_new_Norm
+        # Xno[0] = R_new
+        # Tno[0] = S_new
+        # Kno[0] = W_new
     else:
         X = np.vstack((X,RSW_new*R_new/R_new_Norm))
         T = np.vstack((T,RSW_new*S_new/S_new_Norm))
         K = np.vstack((K,RSW_new*W_new/W_new_Norm))
+        # Xno = np.vstack((Xno,R_new))
+        # Tno = np.vstack((Tno,S_new))
+        # Kno = np.vstack((Kno,W_new))
     # print(Yellow+'   ....checking enrichment convergence')
 
     ###############################################
@@ -212,20 +283,15 @@ while eps_check > eps:
         S1 += dt/2*(T[0][ids+1]**2 + T[0][ids]**2)
     for idw in np.arange(0,Ksize-1):
         W1 += dk/2*(K[0][idw+1]**2 + K[0][idw]**2)
+
     eps_check = math.sqrt(intR_new*intS_new*intW_new)/math.sqrt(R1*S1*W1)
 
-    ## tony's interpretation
-    # TotSum = 0.0; NewSum = 0.0
-    # for enr in np.arange(0,len(X)):
-    #     for idr in np.arange(0,Xsize):
-    #         for idt in np.arange(0,Tsize):
-    #             for idk in np.arange(0,Ksize):
-    #                 TotSum += abs(X[enr][idr]*T[enr][idt]*K[enr][idk])
-    #                 if enr == len(X)-1:
-    #                     NewSum += abs(X[enr][idr]*T[enr][idt]*K[enr][idk])
-    # eps_check = NewSum/TotSum
+    print(Yellow+'Error = {0:.12e}'.format(eps_check))
 
-    print(Yellow+'Error = '+str(eps_check))
+    # if NumEnr == 4:
+    #     IntegralsOut.close()
+    #     sys.exit()
+
     if eps_check >= eps:
         if NumEnr == MaxEnr:
             print(Red+'\nThe maximum number of enrichment iterations reached. Solution error is '+str(eps_check)+'\n'); break
@@ -234,13 +300,6 @@ while eps_check > eps:
         break
 
 ###############################################################################
-
-def normSqRt(Vec,size,stp):
-    tmp = 0.0
-    for idx in np.arange(0,size-1):
-        tmp += stp/2*(Vec[idx+1]**2 + Vec[idx]**2)
-    return(math.sqrt(tmp))
-
 print('plots!')
 
 ###############################
@@ -252,18 +311,21 @@ for cnt,elem in enumerate(X[0:4]):
     plt.plot(np.linspace(0,1,Xsize), elem/normSqRt(elem,Xsize,dx), label = str(cnt), linewidth = 3) #elem/norm(elem,Xsize,dx)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
+plt.xlabel('space domain')
 
 plt.figure(2)
 for cnt,elem in enumerate(T[0:4]):
     plt.plot(np.linspace(0,0.1,Tsize), elem/normSqRt(elem,Tsize,dt), label = str(cnt), linewidth = 3) #elem/norm(elem,Tsize,dt)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
+plt.xlabel('time domain')
 
 plt.figure(3)
 for cnt,elem in enumerate(K[0:4]):
     plt.plot(np.linspace(1,5,Ksize), elem/normSqRt(elem,Ksize,dk), label = str(cnt), linewidth = 3) #elem/norm(elem,Ksize,dk)
 plt.grid(True)
 plt.legend(loc='best',fontsize='x-small')
+plt.xlabel('parameter space')
 
 #################################
 ## Writeout X,T,K data to file ##
@@ -272,46 +334,28 @@ plt.legend(loc='best',fontsize='x-small')
 fileout = open('data.txt','w')
 for idx in np.arange(0,Xsize):
     for enr in np.arange(0,len(X)):
-        fileout.write(str(X[enr][idx])+'\t')
+        fileout.write('{0:.15e}\t'.format(X[enr][idx]))
     fileout.write('\n')
 
 fileout.write('\n\n')
-for ids in np.arange(0,Tsize):
+for idt in np.arange(0,Tsize):
     for enr in np.arange(0,len(T)):
-        fileout.write(str(T[enr][ids])+'\t')
+        fileout.write('{0:.15e}\t'.format(T[enr][idt]))
     fileout.write('\n')
 
 fileout.write('\n\n')
 for idk in np.arange(0,Ksize):
     for enr in np.arange(0,len(K)):
-        fileout.write(str(K[enr][idk])+'\t')
+        fileout.write('{0:.15e}\t'.format(K[enr][idk]))
     fileout.write('\n')
 
 fileout.close()
-
+# sys.exit()
 ################################################
 ## Plot PGD Error as a function of Enrichment ##
 ################################################
 
 print('\nFinding error of PGD solution as a function of enrichment step.')
-
-def SubLists(a,b):
-    c = np.zeros(len(a))
-    for idx in np.arange(0,len(a)):
-        c[idx] = a[idx]-b[idx]
-    return(c)
-
-def normSq(Vec,size,stp):
-    tmp = 0.0
-    for idx in np.arange(0,size-1):
-        tmp += stp/2*(Vec[idx+1]**2 + Vec[idx]**2)
-    return(tmp)
-
-def norm(Vec,size,stp):
-    tmp = 0.0
-    for idx in np.arange(0,size-1):
-        tmp += stp/2*(Vec[idx+1] + Vec[idx])
-    return(tmp)
 
 ErrTmp1 = np.ones(Tsize)
 ErrTmp2 = np.ones((NumEnr,Ksize))
@@ -343,6 +387,7 @@ for idk,filename in enumerate(tqdm(lst)):
 for enr,elem in enumerate(ErrTmp2): # pass each column
     PGDError[enr]=norm(elem,Ksize,dk) # once ErrTmp2 is full, you have the space and time integrated error as a function of conductivity and enrichment step. So integrate out the conductivity and you will have error as a fucntion of enrichment.
 
+print(PGDError)
 
 plt.figure(4)
 plt.semilogy(np.arange(1,NumEnr+1),PGDError)
