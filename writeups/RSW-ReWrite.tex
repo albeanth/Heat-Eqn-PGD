@@ -62,18 +62,18 @@ Using backward euler, we can discretize the above equation as follows:  \\
 for $i=1:(151-1)$ ; $S(i=0,t) = 0$ 
 \begin{align}
 w_1 \cdot r_1 & \left( \frac{S_{i+1} - S_i}{\Delta t} \right) - w_2 \cdot r_2 \cdot S_{i+1} \nonumber \\
-& = -\ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_i \right) + w_3 \cdot r_3 \cdot f
+& = -\ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_{i+1} \right) + w_3 \cdot r_3 \cdot f
 \end{align}
 ------------------------\\
 Can be rewritten as:
 \begin{align}
 S_{i+1} & \left( \frac{w_1 \cdot r_1}{\Delta t} - w_2 \cdot r_2 \right) - \frac{w_1 \cdot r_1}{\Delta t}S_i \nonumber \\ 
-& = - \ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_i \right) + w_3 \cdot r_3 \cdot f
+& = - \ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_{i+1} \right) + w_3 \cdot r_3 \cdot f
 \end{align}
 
 And finally discretized in the following form:
 \begin{align}
-S_{i+1} =  \frac{\frac{w_1 \cdot r_1}{\Delta t}S_i - \ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_i \right) + w_3 \cdot r_3 \cdot f}{\left( \frac{w_1 \cdot r_1}{\Delta t} - w_2 \cdot r_2 \right)}
+S_{i+1} =  \frac{\frac{w_1 \cdot r_1}{\Delta t}S_i - \ds\sum_{j=1}^{n-1} \left( w_4^j \cdot r_5^j \cdot \frac{T^j_{i+1} - T^j_i}{\Delta t} - w_5^j \cdot r_4^j \cdot T^j_{i+1} \right) + w_3 \cdot r_3 \cdot f}{\left( \frac{w_1 \cdot r_1}{\Delta t} - w_2 \cdot r_2 \right)}
 \end{align}
 
 \section*{W(k)}
