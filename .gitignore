@@ -4,3 +4,7 @@ __pycache__
 *.aux
 *.pdf
 *.synctex.gz
+~$*.xlsx
+
+WorkingDirectory/
+NewTest_2-10-17/

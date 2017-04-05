@@ -63,35 +63,35 @@ u^*(x,t,k) = R^*(x) \cdot S(t) \cdot W(k)
 
 Now, plugging Equations \ref{eq::R-TestFctn} and \ref{eq::TrialFctn} into the weighted residual form (Equation \ref{eq::WeightedResidualForm}):
 \begin{align*}
-\ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \bigg[ \frac{\pd}{\pd t} \left( R(x) \cdot S(t) \cdot (W(k) \right) - \\
-&  k\grad^2 \cdot \left( R(x) \cdot S(t) \cdot (W(k) \right) -f \bigg] dx \cdot dt \cdot dk =
+\ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \bigg[ \frac{\pd}{\pd t} \left( R(x) \cdot S(t) \cdot (W(k) \right) \\
+&  -k\grad^2 \cdot \left( R(x) \cdot S(t) \cdot (W(k) \right) -f \bigg] dx \cdot dt \cdot dk =
 \end{align*}
 \begin{align}
 \label{eq::R-1}
-- \ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \Bigg[\frac{\pd}{\pd t} \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_j(x) \cdot T_j(t) \cdot K_j(k)\right)\right) - \nonumber\\
-&  k\grad^2 \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_j(x) \cdot T_j(t) \cdot K_j(k)\right) \right)\Bigg] dx \cdot dt \cdot dk
+- \ds\int_{\Omega_x \times \Omega_t \times \Omega_k} & R^*(x) \cdot S(t) \cdot W(k) \Bigg[\frac{\pd}{\pd t} \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_j(x) \cdot T_j(t) \cdot K_j(k)\right)\right)\nonumber\\
+&  - k\grad^2 \cdot \left( \ds\sum_{j=1}^{n-1} \left(X_j(x) \cdot T_j(t) \cdot K_j(k)\right) \right)\Bigg] dx \cdot dt \cdot dk
 \end{align}
 
 The RHS of Equation \ref{eq::R-1} is known as the residual and reduces to a known scalar value at time step $n$ (i.e. the previous step in which we know all of the information). We can begin to simplify Equation \ref{eq::R-1} by distributing and collecting terms:
 \begin{equation*}
-\ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t}dt}_{s_2} \cdot \underbrace{\ds\int_{\Omega_k} W(k)^2 dk}_{w_1} - \grad^2 R(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_k} kW(k)^2 dk}_{w_2} \Bigg] dx =
+\ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{dS}{dt}dt}_{s_2} \cdot \underbrace{\ds\int_{\Omega_k} W(k)^2 dk}_{w_1} - \grad^2 R(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_k} kW(k)^2 dk}_{w_2} \Bigg] dx =
 \end{equation*}\vspace{-15pt}
 \begin{align}
 -\ds\int_{\Omega_x}& R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{dT_j(t)}{dt} dt}_{s_4} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_j(k) dk}_{w_4} - \nonumber \\
-& \grad^2X_j(x) \cdot \underbrace{\ds\int_{\Omega_t}S(t)T_j(t) dt}_{s_5} \cdot \underbrace{\ds\int_{\Omega_k}kW(k)K_j(k)dk}_{w_5} \bigg) + f \cdot \underbrace{\ds\int_{\Omega_t} S(t) dt}_{s_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dx
+& \grad^2X_j(x) \cdot \underbrace{\ds\int_{\Omega_t}S(t)T_j(t) dt}_{s_5} \cdot \underbrace{\ds\int_{\Omega_k}kW(k)K_j(k)dk}_{w_5} \bigg) - f \cdot \underbrace{\ds\int_{\Omega_t} S(t) dt}_{s_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dx
 \end{align}
 
 Rewriting the above equation, we can obtain a weak form that can be solved via a suitable discretization scheme like finite elements:
 \begin{gather}
 \ds\int_{\Omega_x} R^*(x) \Bigg[ R(x)\cdot s_2 \cdot w_1 - \grad^2 R(x) \cdot s_1 \cdot w_2 \Bigg] dx = \nonumber \\
- -  \ds\int_{\Omega_x} R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot s_4 \cdot w_4 - \grad^2X_j(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3 \Bigg] dx
+ -  \ds\int_{\Omega_x} R^*(x) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot s_4 \cdot w_4 - \grad^2X_j(x) \cdot s_5 \cdot w_5 \bigg) - f \cdot s_3 \cdot w_3 \Bigg] dx
 \end{gather}
 
 We can also consider the strong form which can be solved numerically through finite difference methods:
 \begin{gather}
 \label{eq::R-strong}
 R(x)\cdot s_2 \cdot w_1 - \grad^2 R(x) \cdot s_1 \cdot w_2 =  \nonumber \\
-\ds\sum_{j=1}^{n-1} \bigg(X_j(x) \cdot s_4 \cdot w_4 - \grad^2X_j(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3
+\ds\sum_{j=1}^{n-1} \bigg(-X_j(x) \cdot s_4 \cdot w_4 + \grad^2X_j(x) \cdot s_5 \cdot w_5 \bigg) + f \cdot s_3 \cdot w_3
 \end{gather}
 
 \subsection{Solving for $\mathbf{S(t)}$ from $\mathbf{R(x)}$ and $\mathbf{W(k)}$}
@@ -107,19 +107,19 @@ As before in the previous section, we can insert Equations \ref{eq::R-TestFctn-2
 \end{equation*}\vspace{-15pt}
 \begin{align}
 = & - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot  \underbrace{\ds\int_{\Omega_x} R(x) X_j(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_k}W(k)K_j(k) dk}_{w_4} \nonumber\\
- - & T_j(t)\cdot \underbrace{\ds\int_{\Omega_k} kW(k)K_j(k)dk}_{w_5} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot\grad^2X_j(x)}_{r_4} \bigg) + f \cdot \underbrace{\ds\int_{\Omega_x} R(x)dx}_{r_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dt
+ - & T_j(t)\cdot \underbrace{\ds\int_{\Omega_k} kW(k)K_j(k)dk}_{w_5} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot\grad^2X_j(x)}_{r_4} \bigg) - f \cdot \underbrace{\ds\int_{\Omega_x} R(x)dx}_{r_3} \cdot \underbrace{\ds\int_{\Omega_k} W(k)dk}_{w_3} \Bigg] dt
 \end{align}
 
 Rewriting the above equation, we can obtain a weak form that can be solved via a suitable discretization scheme like finite elements:
 \begin{gather}
 \ds\int_{\Omega_t} S^*(t) \bigg[ \frac{\pd S}{\pd t} \cdot r_1 \cdot w_1- S(t) \cdot w_2 \cdot r_2 \bigg] \nonumber \\
-= - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot r_5 \cdot w_4 - T_j(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3 \Bigg] dt
+= - \ds\int_{\Omega_t} S^*(t) \Bigg[ \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot r_5 \cdot w_4 - T_j(t)\cdot w_5 \cdot r_4 \bigg) - f \cdot r_3 \cdot w_3 \Bigg] dt
 \end{gather}
 
 We can also consider the strong form which can be solved numerically through finite difference methods:
 \begin{equation}
 \label{eq::S-Strong}
-\frac{\pd S}{\pd t} \cdot r_1 \cdot w_1 - S(t) \cdot w_2 \cdot r_2 = \ds\sum_{j=1}^{n-1} \bigg( \frac{\pd T_j}{\pd t} \cdot r_5 \cdot w_4 - T_j(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3
+\frac{\pd S}{\pd t} \cdot r_1 \cdot w_1 - S(t) \cdot w_2 \cdot r_2 = \ds\sum_{j=1}^{n-1} \bigg( - \frac{\pd T_j}{\pd t} \cdot r_5 \cdot w_4 + T_j(t)\cdot w_5 \cdot r_4 \bigg) + f \cdot r_3 \cdot w_3
 \end{equation}
 
 \subsection{Solving for $\mathbf{W(k)}$ from $\mathbf{R(x)}$ and $\mathbf{S(t)}$}
@@ -131,11 +131,11 @@ u^*(x,t,k) = R(x) \cdot S(t) \cdot W^*(k)
 
 As before in the previous sections, we can insert Equations \ref{eq::R-TestFctn-3} and \ref{eq::TrialFctn} into Equation \ref{eq::WeightedResidualForm}, distributing and collecting terms, and obtain the following:
 \begin{equation*}
-\ds\int_{\Omega_t} W^*(k) \bigg[W(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)^2 dx}_{r_1} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{\pd S}{\pd t} dt}_{s_2} - kW(k) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2R(x) dx}_{r_2} \bigg]
+\ds\int_{\Omega_t} W^*(k) \bigg[W(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)^2 dx}_{r_1} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\frac{dS}{dt} dt}_{s_2} - kW(k) \cdot \underbrace{\ds\int_{\Omega_t} S(t)^2 dt}_{s_1} \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2R(x) dx}_{r_2} \bigg]
 \end{equation*}\vspace{-15pt}
 \begin{align}
-=  -& \ds\int_{\Omega_k} W^*(k) \Bigg[\ds\sum_{j=1}^{n-1} \bigg( K_j(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot X_j(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_t} S(t) \frac{\pd T_j}{\pd t} dt}_{s_4} \nonumber\\
-- &k K_j  \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2 X_j(x)dx}_{r_4} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\cdot T_j(t)dt}_{s_5}\bigg) + f\cdot \underbrace{\ds\int_{\Omega_x} R(x) dx }_{r_3} \cdot \underbrace{\ds\int_{\Omega_t}S(t)dt}_{s_3} \Bigg]
+=  -& \ds\int_{\Omega_k} W^*(k) \Bigg[\ds\sum_{j=1}^{n-1} \bigg( K_j(k) \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot X_j(x) dx}_{r_5} \cdot \underbrace{\ds\int_{\Omega_t} S(t) \frac{dT_j}{dt} dt}_{s_4} \nonumber\\
+- &k K_j  \cdot \underbrace{\ds\int_{\Omega_x} R(x)\cdot \grad^2 X_j(x)dx}_{r_4} \cdot \underbrace{\ds\int_{\Omega_t} S(t)\cdot T_j(t)dt}_{s_5}\bigg) - f\cdot \underbrace{\ds\int_{\Omega_x} R(x) dx }_{r_3} \cdot \underbrace{\ds\int_{\Omega_t}S(t)dt}_{s_3} \Bigg]
 \end{align}
 
 Simplifying the above equation, we can obtain an analytical solution for the unknown $W(k)$ value:
@@ -154,7 +154,7 @@ Equations \ref{eq::R-strong}, \ref{eq::S-Strong}, and \ref{eq::W-analytical} are
 Approaching Equation \ref{eq::R-strong} from the left hand side on a term by term basis, we can obtain the following:
 \begin{subequations}
 \begin{align*}
--\grad^2R(x) &\to \frac{R(i+1)-2R(i)+R(i-1)}{2\Delta x}  \\[5pt]
+-\grad^2R(x) &\to -\frac{R(i+1)-2R(i)+R(i-1)}{2\Delta x}  \\[5pt]
 s_1 &\to \frac{\Delta t}{2} \left( S(i)^2 + S(i-1)^2 \right) \\[5pt]
 w_2 &\to k\frac{\Delta k}{2}\left( W(i)^2+W(i-1)^2\right)   \\[5pt]
 w_1 &\to \frac{\Delta k}{2}\left(W(i)^2 + W(i-1)^2 \right)  \\[5pt]
